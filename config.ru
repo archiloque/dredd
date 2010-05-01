@@ -1,0 +1,2 @@
+require 'dredd'
+run Dredd
