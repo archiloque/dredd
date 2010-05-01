@@ -1,0 +1,24 @@
+<form action="/admin" class="login" method="post">
+
+  <p>
+    <label for="email_from">Email d'envoi</label>
+    <input id="email_from" name="email_from" type="text" value="<%= @email_from %>"/>
+  </p>
+
+  <p>
+    <label for="email_to">Email de destination</label>
+    <input id="email_to" name="email_to" type="text" value="<%= @email_to %>"/>
+  </p>
+
+  <p>
+    <label for="default_header">En-tête par défaut</label>
+    <input id="default_header" name="default_header" type="text" value="<%= @default_header %>"/>
+  </p>
+
+  <p>
+    <label for="default_body">Contenu du message par défaut</label><br/>
+    <textarea id="default_body" name="default_body" cols="120" rows="10"><%= @default_body %></textarea>
+  </p>
+
+  <input name="commit" type="submit" value="Mettre à jour"/>
+</form>

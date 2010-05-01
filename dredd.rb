@@ -9,6 +9,7 @@ require 'dm-validations'
 require 'dm-types'
 require 'dm-timestamps'
 require 'dm-aggregates'
+require 'andand'
 
 DataMapper::Logger.new(STDOUT, :debug)
 DataMapper.setup(:default, "sqlite3://#{Dir.pwd}/dredd.sqlite3")
@@ -24,6 +25,16 @@ class Dredd < Sinatra::Base
   use Rack::Session::Pool
   require 'rack/openid'
   use Rack::OpenID
+
+  def check_logged
+    true
+    #if session[:user]
+    #  true
+    #else
+    #  redirect '/login'
+    #  false
+    #end
+  end
 
   get '/' do
     erb :index
@@ -56,6 +67,30 @@ class Dredd < Sinatra::Base
   get '/logout' do
     session[:user] = nil
     redirect '/'
+  end
+
+  get '/admin' do
+    if check_logged
+      @title = 'Administration'
+      @email_from = Meta.first(:name => :email_from).andand.value
+      @email_to = Meta.first(:name => :email_to).andand.value
+      @default_header = Meta.first(:name => :default_header).andand.value
+      @default_body = Meta.first(:name => :default_body).andand.value
+      erb :admin
+    end
+  end
+
+  post '/admin' do
+    if check_logged
+      [:email_from, :email_to, :default_header, :default_body].each do |key|
+        if Meta.count(:name => key) == 0
+          Meta.new(:name => key, :value => params[key]).save
+        else
+          Meta.first(:name => key).update(:value => params[key])
+        end
+      end
+      redirect '/admin'
+    end
   end
 
   get '/stylesheet.css' do

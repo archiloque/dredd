@@ -3,10 +3,12 @@
 <head>
   <link href="/stylesheet.css" rel="stylesheet" type="text/css"/>
   <title>[dredd] <%= @title %></title>
+   <meta charset="utf-8">
 </head>
 <body>
 <div id="navigation">
   <% if session[:user] %>
+    <a href="/admin">Administration</a>
     <a href="/logout">Logout</a>
   <% else %>
     <a href="/login">Login</a>
