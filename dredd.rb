@@ -19,7 +19,9 @@ class Dredd < Sinatra::Base
 
   set :views, File.dirname(__FILE__) + '/views'
   set :public, File.dirname(__FILE__) + '/public'
-  use Rack::Session::Cookie
+
+  # open id
+  use Rack::Session::Pool
   require 'rack/openid'
   use Rack::OpenID
 
