@@ -1,5 +1,13 @@
 Let me judge your mails, tool to survey mailing lists health.
 
+# Add a user
+
+To add a user, connect to the 'dredd.sqlite3' database and add its OpenId identifier to the user table
+
+insert into users(openid_identifier) values('http://XXXXXX.myopenid.com/');
+
+####
+
 Le contenu technique spécifique à ce site (html, css, javascript) sauf part les bilbiothèques extérieures est placé sous license MIT.
 
 The MIT License

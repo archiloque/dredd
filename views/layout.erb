@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="/stylesheet.css" rel="stylesheet" type="text/css"/>
+  <title>[dredd] <%= @title %></title>
+</head>
+<body>
+<div id="navigation">
+  <% if session[:user] %>
+    <a href="/logout">Logout</a>
+  <% else %>
+    <a href="/login">Login</a>
+  <% end %>
+</div>
+<div id="content">
+
+  <% if @title %>
+    <div id="title"><%= @title %></div>
+  <% end %>
+
+  <%= yield %>
+</div>
+</body>
+</html>

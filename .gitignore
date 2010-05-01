@@ -1,3 +1,4 @@
 .bundle
 .idea/*.*
 .idea/**/*.*
+dredd.sqlite3
