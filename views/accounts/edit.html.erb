@@ -1,0 +1,8 @@
+<form action="<%= @account.id ? "/edit_account/#{@account.id}" : "/new_account" %>" method="post">
+
+  <%= input_text('account[name]', 'Nom', @account.name) %>
+  <%= input_text('account[address]', 'Adresse', @account.address) %>
+  <%= input_checkbox('account[enabled]', 'Activé', @account.enabled) %>
+
+<input name="commit" type="submit" value="<%= @account.id ? 'Mettre à jour' : 'Ajouter' %>"/>
+</form>

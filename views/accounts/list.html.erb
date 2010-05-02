@@ -1,0 +1,10 @@
+<% @enabled_accounts.each do |account| %>
+<% end %>
+<% @disabled_accounts.each do |account| %>
+<% end %>
+
+<% if @user_logged %>
+  <p>
+    <a href="/new_account">Ajouter un compte</a>
+  </p>
+<% end %>
