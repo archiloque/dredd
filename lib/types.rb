@@ -11,7 +11,7 @@ class User < Sequel::Model
     begin
       URI.parse openid_identifier
     rescue URI::InvalidURIError
-      errors.add(:openid_identifier, "n'est pas une adresse valide")
+      errors.add("", "[#{openid_identifier} n'est pas une adresse valide")
     end
   end
 end
@@ -31,7 +31,13 @@ migration "create table accounts" do
   database.create_table :accounts do
     primary_key :id, :type=>Integer, :null => false
     String :name, :null => false, :index => true, :unique => true
-    String :address, :null => false, :format => :email_address, :unique => true
+
+    String :username, :null => false
+    String :server_address, :null => false
+    String :password, :null => false
+    Boolean :ssl, :null => false
+    Integer :port, :null => false, :unsigned => true
+
     Boolean :enabled, :null => false, :default => true
     DateTime :created_at, :null => false
     DateTime :updated_at
@@ -43,9 +49,25 @@ class Account < Sequel::Model
   plugin :timestamps
 
   def validate
-    if address && ("" != address)
-      unless EmailVeracity::Address.new(address).valid?
-        errors.add(:address, "[#{address}] n'est pas une adresse email valide")
+    if name.blank?
+      errors.add("", "Le nom du compte est vide")
+    end
+    if username.blank?
+      errors.add("", "Le nom de l'utilisateur est vide")
+    end
+    if server_address.blank?
+      errors.add("", "L'addresse du serveur est vide")
+    end
+    if password.blank?
+      errors.add("", "Le mot de passe est vide")
+    end
+    if port.blank?
+      errors.add("", "Le port est vide")
+    else
+      begin
+        Integer(port)
+      rescue ArgumentError
+        errors.add("", "La valeur du port est invalide")
       end
     end
   end

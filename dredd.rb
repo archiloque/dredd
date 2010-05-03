@@ -50,24 +50,60 @@ class Dredd < Sinatra::Base
     erb :'index.html'
   end
 
-  get '/accounts' do
+  get '/accounts/?' do
     @title = 'Comptes'
     @enabled_accounts = Account.where(:enabled => true).order(:name)
     @disabled_accounts = Account.where(:enabled => false).order(:name)
     erb :'accounts/list.html'
   end
 
-  get '/accounts/:id' do
-    @account = Account.where(:id => params[:id]).first
-    @title = @account.name
-    erb :'accounts/show.html'
+  get '/accounts/:name' do
+    @account = Account.where(:name => params[:name]).first
+    if @account
+      @title = @account.name
+      erb :'accounts/show.html'
+    else
+      flash[:error] = 'Ce compte n\'existe pas'
+      redirect '/accounts'
+    end
   end
 
-  get '/edit_account/:id' do
+  get '/edit_account/:name' do
     if check_logged
-      @account = Account.where(:id => params[:id]).first
-      @title = "Editer #{@account.name}"
-      erb :'accounts/edit.html'
+      @account = Account.where(:name => params[:name]).first
+      if @account
+        @title = "Editer #{@account.name}"
+        erb :'accounts/edit.html'
+      else
+        flash[:error] = 'Ce compte n\'existe pas'
+        redirect '/accounts'
+      end
+    end
+  end
+
+  post '/edit_account/:name' do
+    if check_logged
+      @account = Account.where(:name => params[:name]).first
+      if @account
+        @account.name = params[:account][:name].downcase
+        @account.username = params[:account][:username]
+        @account.server_address = params[:account][:server_address]
+        @account.password = params[:account][:password]
+        @account.ssl = params[:account][:ssl]
+        @account.port = params[:account][:port]
+        @account.enabled = params[:account][:enabled]
+        begin
+          @account.save
+          flash[:notice] = 'Compte modifié'
+          redirect "/accounts/#{@account.name}"
+        rescue Sequel::ValidationFailed => e
+          flash[:error] = e.errors
+          erb :'accounts/edit.html'
+        end
+      else
+        flash[:error] = 'Ce compte n\'existe pas'
+        redirect '/accounts'
+      end
     end
   end
 
@@ -83,13 +119,25 @@ class Dredd < Sinatra::Base
   post '/new_account' do
     if check_logged
       name = params[:account][:name].downcase
-      @account = Account.new(:name => name, :address => params[:account][:address], :enabled => params[:account][:enabled])
-      begin
-        @account.save
-        redirect "/accounts/#{@account.id}"
-      rescue Sequel::ValidationFailed => e
-        flash[:error] = e.errors
+      if Account.filter(:name => name).count != 0
+        flash[:error] = "Il y a déjà un compte avec ce nom"
         erb :'accounts/edit.html'
+      else
+        @account = Account.new(:name => name,
+                               :username => params[:account][:username],
+                               :server_address => params[:account][:server_address],
+                               :password => params[:account][:password],
+                               :ssl => params[:account][:ssl],
+                               :port => params[:account][:port],
+                               :enabled => params[:account][:enabled])
+        begin
+          @account.save
+          flash[:notice] = 'Compte créé'
+          redirect "/accounts/#{@account.name}"
+        rescue Sequel::ValidationFailed => e
+          flash[:error] = e.errors
+          erb :'accounts/edit.html'
+        end
       end
     end
   end
@@ -103,6 +151,7 @@ class Dredd < Sinatra::Base
     if resp = request.env['rack.openid.response']
       if resp.status == :success
         session[:user] = resp
+        flash[:notice] = 'Connecté'
         redirect '/'
       else
         halt 404, "Error: #{resp.status}"
@@ -120,6 +169,7 @@ class Dredd < Sinatra::Base
 
   get '/logout' do
     session[:user] = nil
+    flash[:notice] = 'Déconnecté'
     redirect '/'
   end
 
@@ -137,12 +187,13 @@ class Dredd < Sinatra::Base
   post '/admin' do
     if check_logged
       [:email_from, :email_to, :default_header, :default_body].each do |key|
-        if Meta.where(:name => key).count == 0
+        if Meta.filter(:name => key).count == 0
           Meta.create(:name => key, :value => params[key])
         else
-          Meta.where(:name => key).update(:value => params[key])
+          Meta.filter(:name => key).update(:value => params[key])
         end
       end
+      flash[:notice] = 'Données mises à jour'
       redirect '/admin'
     end
   end

@@ -1,6 +1,15 @@
 <% @enabled_accounts.each do |account| %>
+  <p>
+    <%= "<a href=\"/accounts/#{account.name}\">#{account.name}</a>" %>
+  </p>
 <% end %>
+
+<p></p>
+
 <% @disabled_accounts.each do |account| %>
+  <p>
+    <%= "<a href=\"/accounts/#{account.name}\">#{account.name}</a>" %>
+  </p>
 <% end %>
 
 <% if @user_logged %>

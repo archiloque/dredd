@@ -8,7 +8,7 @@
 <body>
 <div id="navigation">
   <a href="/accounts">Comptes</a>
-  <% if session[:user] %>
+  <% if @user_logged %>
     <a href="/admin">Administration</a>
     <a href="/logout">Logout</a>
   <% else %>

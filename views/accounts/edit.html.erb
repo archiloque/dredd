@@ -1,7 +1,13 @@
-<form action="<%= @account.id ? "/edit_account/#{@account.id}" : "/new_account" %>" method="post">
+<form action="<%= @account.id ? "/edit_account/#{@account.name}" : "/new_account" %>" method="post">
 
-  <%= input_text('account[name]', 'Nom', @account.name) %>
-  <%= input_text('account[address]', 'Adresse', @account.address) %>
+  <%= input_text('account[name]', 'Nom du compte', @account.name) %>
+
+  <%= input_text('account[username]', 'Utilisateur', @account.username) %>
+  <%= input_text('account[server_address]', 'Adresse du serveur', @account.server_address) %>
+  <%= input_text('account[password]', 'Mot de passe', @account.password) %>
+  <%= input('account[port]', 'Port', @account.port, 'number') %>
+  <%= input_checkbox('account[ssl]', 'SSL', @account.ssl) %>
+
   <%= input_checkbox('account[enabled]', 'Activé', @account.enabled) %>
 
 <input name="commit" type="submit" value="<%= @account.id ? 'Mettre à jour' : 'Ajouter' %>"/>

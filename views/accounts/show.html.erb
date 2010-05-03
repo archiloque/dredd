@@ -1,0 +1,19 @@
+<%= value('Nom du compte', @account.name) %>
+<% if @user_logged %>
+  <%= value('Utilisateur', @account.username) %>
+<% end %>
+<%= value('Adresse du serveur', @account.server_address) %>
+<% if @user_logged %>
+  <%= value('Mot de passe', @account.password) %>
+<% end %>
+<%= value_checkbox('SSL', @account.ssl) %>
+<%= value('Port', @account.port) %>
+<%= value_checkbox('Activé', @account.enabled) %>
+<%= value('Création', affiche_date(@account.created_at)) %>
+
+<p>
+  <% if @user_logged %>
+    <a href="/edit_account/<%= @account.name %>">Éditer</a>
+  <% end %>
+  <a href="/accounts">Liste des comptes</a>
+</p>
