@@ -36,10 +36,10 @@ module Sinatra
   </p>"
     end
 
-    def input_text(name, label, value)
+    def input_text(name, label, value, size = nil)
       "<p>
       <label for=\"#{name}\">#{label}</label>
-      <input id=\"#{name}\" name=\"#{name}\" type=\"text\" value=\"#{value}\"/>
+      <input id=\"#{name}\" name=\"#{name}\" type=\"text\" value=\"#{value}\"#{size ? " size=\"#{size}\"" : ''}/>
   </p>"
     end
 
@@ -59,8 +59,8 @@ module Sinatra
 
     def input_text_area(name, label, value, cols, rows)
       "<p>
-      <label for=\"#{name}\">#{label}</label>
-      <textarea id=\"#{name}\" name=\"#{name}\" cols=\"#{cols}\" rows=\"#{rows}\">#{value}\"</textarea>
+      <label for=\"#{name}\">#{label}</label><br/>
+      <textarea id=\"#{name}\" name=\"#{name}\" cols=\"#{cols}\" rows=\"#{rows}\">#{value}</textarea>
   </p>"
     end
 

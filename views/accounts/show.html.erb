@@ -1,6 +1,6 @@
 <%= value('Nom du compte', @account.name) %>
 <% if @user_logged %>
-  <%= value('Utilisateur', @account.username) %>
+  <%= value('Adresse mail', @account.address) %>
 <% end %>
 <%= value('Adresse du serveur', @account.server_address) %>
 <% if @user_logged %>
@@ -14,6 +14,8 @@
 <p>
   <% if @user_logged %>
     <a href="/edit_account/<%= @account.name %>">Éditer</a>
+    <a href="#" onclick="testAccount('<%= @account.name %>')">Tester</a>
   <% end %>
   <a href="/accounts">Liste des comptes</a>
 </p>
+<p id="zoneMessage"></p>

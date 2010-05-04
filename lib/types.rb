@@ -32,7 +32,7 @@ migration "create table accounts" do
     primary_key :id, :type=>Integer, :null => false
     String :name, :null => false, :index => true, :unique => true
 
-    String :username, :null => false
+    String :address, :null => false
     String :server_address, :null => false
     String :password, :null => false
     Boolean :ssl, :null => false
@@ -52,8 +52,8 @@ class Account < Sequel::Model
     if name.blank?
       errors.add("", "Le nom du compte est vide")
     end
-    if username.blank?
-      errors.add("", "Le nom de l'utilisateur est vide")
+    if address.blank?
+      errors.add("", "L'addresse mail est vide")
     end
     if server_address.blank?
       errors.add("", "L'addresse du serveur est vide")

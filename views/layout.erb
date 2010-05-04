@@ -3,13 +3,16 @@
 <head>
   <link href="/stylesheet.css" rel="stylesheet" type="text/css"/>
   <title>[dredd] <%= @title %></title>
-   <meta charset="utf-8">
+  <meta charset="utf-8">
+  <script src="/jquery.js" type="text/javascript"></script>
+  <script src="/dredd.js" type="text/javascript"></script>
 </head>
 <body>
 <div id="navigation">
   <a href="/accounts">Comptes</a>
   <% if @user_logged %>
     <a href="/admin">Administration</a>
+    <a href="/config">Configuration</a>
     <a href="/logout">Logout</a>
   <% else %>
     <a href="/login">Login</a>

@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'bundler'
 require 'logger'
+require 'andand'
 
 Bundler.setup
 
@@ -28,22 +29,14 @@ class Dredd < Sinatra::Base
   require 'lib/types'
   require 'lib/helpers'
   helpers Sinatra::DreddHelper
+  require 'lib/mail'
+  helpers Sinatra::DreddMailHelper
 
   use Rack::Flash
 
   before do
     # @user_logged = session[:user]
     @user_logged = true
-  end
-
-  def check_logged
-    true
-    #if @user_logged
-    #  true
-    #else
-    #  redirect '/login'
-    #  false
-    #end
   end
 
   get '/' do
@@ -84,25 +77,23 @@ class Dredd < Sinatra::Base
   post '/edit_account/:name' do
     if check_logged
       @account = Account.where(:name => params[:name]).first
-      if @account
-        @account.name = params[:account][:name].downcase
-        @account.username = params[:account][:username]
-        @account.server_address = params[:account][:server_address]
-        @account.password = params[:account][:password]
-        @account.ssl = params[:account][:ssl]
-        @account.port = params[:account][:port]
-        @account.enabled = params[:account][:enabled]
-        begin
-          @account.save
-          flash[:notice] = 'Compte modifié'
-          redirect "/accounts/#{@account.name}"
-        rescue Sequel::ValidationFailed => e
-          flash[:error] = e.errors
-          erb :'accounts/edit.html'
-        end
-      else
-        flash[:error] = 'Ce compte n\'existe pas'
-        redirect '/accounts'
+      unless @account
+        halt 404, 'Ce compte n\'existe pas'
+      end
+      @account.name = params[:account][:name].downcase
+      @account.address = params[:account][:address]
+      @account.server_address = params[:account][:server_address]
+      @account.password = params[:account][:password]
+      @account.ssl = params[:account][:ssl] || false
+      @account.port = params[:account][:port]
+      @account.enabled = params[:account][:enabled]
+      begin
+        @account.save
+        flash[:notice] = 'Compte modifié'
+        redirect "/accounts/#{@account.name}"
+      rescue Sequel::ValidationFailed => e
+        flash[:error] = e.errors
+        erb :'accounts/edit.html'
       end
     end
   end
@@ -124,10 +115,10 @@ class Dredd < Sinatra::Base
         erb :'accounts/edit.html'
       else
         @account = Account.new(:name => name,
-                               :username => params[:account][:username],
+                               :address => params[:account][:address],
                                :server_address => params[:account][:server_address],
                                :password => params[:account][:password],
-                               :ssl => params[:account][:ssl],
+                               :ssl => params[:account][:ssl] || false,
                                :port => params[:account][:port],
                                :enabled => params[:account][:enabled])
         begin
@@ -138,6 +129,21 @@ class Dredd < Sinatra::Base
           flash[:error] = e.errors
           erb :'accounts/edit.html'
         end
+      end
+    end
+  end
+
+  get '/test_account/:name' do
+    if check_logged_ajax
+      account = Account.where(:name => params[:name]).first
+      unless account
+        halt 404, 'Ce compte n\'existe pas'
+      end
+      begin
+        test_account account
+        body '<div class="messageOK">OK !</div>'
+      rescue Exception => e
+        body "<div class=\"messageKO\">#{e}</div>"
       end
     end
   end
@@ -176,25 +182,37 @@ class Dredd < Sinatra::Base
   get '/admin' do
     if check_logged
       @title = 'Administration'
-      @email_from = Meta.first(:name => :email_from).andand.value
-      @email_to = Meta.first(:name => :email_to).andand.value
-      @default_header = Meta.first(:name => :default_header).andand.value
-      @default_body = Meta.first(:name => :default_body).andand.value
-      erb :'admin/admin.html'
+      erb :'admin/index.html'
     end
   end
 
-  post '/admin' do
+  get '/config' do
     if check_logged
-      [:email_from, :email_to, :default_header, :default_body].each do |key|
+      @title = 'Configuration'
+      @email_from = Meta.where(:name => 'email_from').first.andand.value
+      @email_to = Meta.where(:name => 'email_to').first.andand.value
+      @default_header = Meta.where(:name => 'default_header').first.andand.value
+      @default_body = Meta.where(:name => 'default_body').first.andand.value
+      erb :'admin/config.html'
+    end
+  end
+
+  post '/config' do
+    if check_logged
+      ['email_from', 'email_to', 'default_header', 'default_body'].each do |key|
         if Meta.filter(:name => key).count == 0
-          Meta.create(:name => key, :value => params[key])
+          meta = Meta.new
+          meta.name = key
+          meta.value = params[key]
+          meta.save
         else
-          Meta.filter(:name => key).update(:value => params[key])
+          meta = Meta.where(:name => key).first
+          meta.value =  params[key]
+          meta.save
         end
       end
       flash[:notice] = 'Données mises à jour'
-      redirect '/admin'
+      redirect '/config'
     end
   end
 
@@ -202,6 +220,28 @@ class Dredd < Sinatra::Base
   get '/stylesheet.css' do
     content_type 'text/css', :charset => 'utf-8'
     sass :stylesheet
+  end
+
+  private
+
+  def check_logged
+    true
+    #if @user_logged
+    #  true
+    #else
+    #  redirect '/login'
+    #  false
+    #end
+  end
+
+  def check_logged_ajax
+    true
+    #if @user_logged
+    #  true
+    #else
+    #  'Réservé aux administrateurs'
+    #  false
+    #end
   end
 
 end
