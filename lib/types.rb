@@ -39,6 +39,11 @@ migration "create table accounts" do
     Integer :port, :null => false, :unsigned => true
 
     Boolean :enabled, :null => false, :default => true
+
+    Boolean :last_connection_successful
+    String :last_connection_error_message
+    DateTime :last_connection_date
+
     DateTime :created_at, :null => false
     DateTime :updated_at
   end
@@ -70,6 +75,13 @@ class Account < Sequel::Model
         errors.add("", "La valeur du port est invalide")
       end
     end
+  end
+
+  def update_after_connection successfull, error_message = nil
+    self.last_connection_date = DateTime.now
+    self.last_connection_successful = successfull
+    self.last_connection_error_message = error_message
+    save
   end
 
 end

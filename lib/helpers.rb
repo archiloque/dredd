@@ -29,6 +29,12 @@ module Sinatra
   </p>"
     end
 
+    def value_under(label, value)
+      "<p>
+      <label>#{label}</label><div class=\"bordered\">#{value}</div>
+  </p>"
+    end
+
     def value_checkbox(label, value)
       "<p>
       <label>#{label}</label> 
@@ -65,7 +71,27 @@ module Sinatra
     end
 
     def affiche_date date
-      date.strftime('%d/%m/%Y')
+      if date
+        date.strftime('%d/%m/%Y')
+      end
+    end
+
+    def affiche_date_heure date
+      if date
+        date.strftime('%d/%m/%Y %H:%M:%S')
+      end
+    end
+
+    def error_2_text e
+      ([e.class, e.message] + e.backtrace).join("\n")
+    end
+
+    def error_2_html e
+      ([e.class, e.message] + e.backtrace).join('<br/>')
+    end
+
+    def error_text_2_html e
+      e.gsub "\n", "<br/>"
     end
 
   end

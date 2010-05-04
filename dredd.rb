@@ -141,9 +141,11 @@ class Dredd < Sinatra::Base
       end
       begin
         test_account account
+        account.update_after_connection true
         body '<div class="messageOK">OK !</div>'
       rescue Exception => e
-        body "<div class=\"messageKO\">#{e}</div>"
+        account.update_after_connection false, error_2_text(e)
+        body "<div class=\"messageKO\">#{error_2_html(e)}</div>"
       end
     end
   end

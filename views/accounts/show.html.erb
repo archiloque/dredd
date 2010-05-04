@@ -1,13 +1,24 @@
-<%= value('Nom du compte', @account.name) %>
-<% if @user_logged %>
-  <%= value('Adresse mail', @account.address) %>
-<% end %>
-<%= value('Adresse du serveur', @account.server_address) %>
-<% if @user_logged %>
-  <%= value('Mot de passe', @account.password) %>
-<% end %>
-<%= value_checkbox('SSL', @account.ssl) %>
-<%= value('Port', @account.port) %>
+<fieldset>
+  <legend>Connection</legend>
+  <% if @user_logged %>
+    <%= value('Adresse mail', @account.address) %>
+  <% end %>
+  <%= value('Adresse du serveur', @account.server_address) %>
+  <% if @user_logged %>
+    <%= value('Mot de passe', @account.password) %>
+  <% end %>
+  <%= value_checkbox('SSL', @account.ssl) %>
+  <%= value('Port', @account.port) %>
+</fieldset>
+<fieldset>
+  <legend>Infos</legend>
+  <%= value('Heure de dernière connection', affiche_date_heure(@account.last_connection_date)) %>
+  <%= value('Connection réussie', (@account.last_connection_successful ? 'oui' : 'non')) %>
+  <% if @account.last_connection_error_message %>
+    <%= value_under('Message d\'erreur de connection:', (error_text_2_html(@account.last_connection_error_message))) %>
+  <% end %>
+</fieldset>
+
 <%= value_checkbox('Activé', @account.enabled) %>
 <%= value('Création', affiche_date(@account.created_at)) %>
 
