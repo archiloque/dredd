@@ -9,6 +9,18 @@ module Sinatra
       create_pop3(account).last
     end
 
+    def send_message original_message
+      mail = Mail.new do
+        from original_message.from
+        to original_message.to
+        subject original_message.subject
+        body original_message.body
+        message_id "<#{original_message.created_at.to_i}@dredd.listes.rezo.com>"
+      end
+      mail.delivery_method :sendmail
+      mail.deliver
+    end
+
     private
 
     def create_pop3 account

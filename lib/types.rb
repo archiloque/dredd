@@ -16,10 +16,11 @@ class User < Sequel::Model
   end
 end
 
+
 migration "create table meta" do
   database.create_table :metas do
     primary_key :name, :type => String, :null => false, :auto_increment => false
-    text :value, :null => true
+    Text :value, :null => true
   end
 end
 
@@ -41,7 +42,7 @@ migration "create table accounts" do
     Boolean :enabled, :null => false, :default => true
 
     Boolean :last_connection_successful
-    String :last_connection_error_message
+    Text :last_connection_error_message
     DateTime :last_connection_date
 
     DateTime :created_at, :null => false
@@ -85,3 +86,22 @@ class Account < Sequel::Model
   end
 
 end
+
+migration "create table messages" do
+  database.create_table :original_messages do
+    primary_key :id, :type=>Integer, :null => false
+    String :from, :null => false
+    String :to, :null => false
+    String :subject, :null => false
+    Text :body, :null => false
+    DateTime :created_at, :null => false
+    DateTime :updated_at
+  end
+end
+
+class OriginalMessage < Sequel::Model
+
+  plugin :timestamps
+
+end
+

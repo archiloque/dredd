@@ -43,6 +43,7 @@ class Dredd < Sinatra::Base
     erb :'index.html'
   end
 
+
   get '/accounts/?' do
     @title = 'Comptes'
     @enabled_accounts = Account.where(:enabled => true).order(:name)
@@ -150,6 +151,7 @@ class Dredd < Sinatra::Base
     end
   end
 
+
   get '/login' do
     @title = 'Login'
     erb :'login.html'
@@ -193,15 +195,15 @@ class Dredd < Sinatra::Base
       @title = 'Configuration'
       @email_from = Meta.where(:name => 'email_from').first.andand.value
       @email_to = Meta.where(:name => 'email_to').first.andand.value
-      @default_header = Meta.where(:name => 'default_header').first.andand.value
-      @default_body = Meta.where(:name => 'default_body').first.andand.value
+      @email_subject = Meta.where(:name => 'email_subject').first.andand.value
+      @email_body = Meta.where(:name => 'email_body').first.andand.value
       erb :'admin/config.html'
     end
   end
 
   post '/config' do
     if check_logged
-      ['email_from', 'email_to', 'default_header', 'default_body'].each do |key|
+      ['email_from', 'email_to', 'email_header', 'email_subject'].each do |key|
         if Meta.filter(:name => key).count == 0
           meta = Meta.new
           meta.name = key
@@ -215,6 +217,30 @@ class Dredd < Sinatra::Base
       end
       flash[:notice] = 'Données mises à jour'
       redirect '/config'
+    end
+  end
+
+
+  post '/send_mail' do
+    if check_logged_or_password
+      from = Meta.where(:name => 'email_from').first.andand.value
+      to = Meta.where(:name => 'email_to').first.andand.value
+      subject = Meta.where(:name => 'email_subject').first.andand.value
+      body = Meta.where(:name => 'email_body').first.andand.value
+      if (from && to && subject && body)
+        message = OriginalMessage.new
+        message.from = from
+        message.to = to
+        message.subject = subject
+        message.body = body
+        message.save
+        send_message message
+        flash[:notice] = 'Mail envoyé'
+        redirect '/admin'
+      else
+        flash[:error] = 'Il manque des valeurs'
+        redirect '/config'
+      end
     end
   end
 
@@ -244,6 +270,10 @@ class Dredd < Sinatra::Base
     #  'Réservé aux administrateurs'
     #  false
     #end
+  end
+
+  def check_logged_or_password
+    true
   end
 
 end

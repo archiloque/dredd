@@ -4,8 +4,8 @@
 
     <%= input_text('email_from', 'Email d\'envoi', @email_from) %>
     <%= input_text('email_to', 'Email de destination', @email_to) %>
-    <%= input_text('default_header', 'En-tête par défaut', @default_header, 50) %>
-    <%= input_text_area('default_body', 'Contenu du message par défaut', @default_body, 120, 5) %>
+    <%= input_text('email_subject', 'Titre', @email_subject, 50) %>
+    <%= input_text_area('email_body', 'Contenu', @email_body, 120, 5) %>
 
     <input name="commit" type="submit" value="Mettre à jour"/>
   </fieldset>
