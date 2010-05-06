@@ -2,6 +2,7 @@ require 'rubygems'
 require 'bundler'
 require 'logger'
 require 'andand'
+require 'sass'
 
 Bundler.setup
 
