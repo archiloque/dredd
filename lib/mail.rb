@@ -1,12 +1,15 @@
 require 'sinatra/base'
 require 'mail'
+require 'net/pop'
 
 module Sinatra
 
   module DreddMailHelper
 
     def test_account account
-      create_pop3(account).last
+      pop3(account) do |pop|
+        pop.n_mails
+      end
     end
 
     def send_message original_message
@@ -23,12 +26,12 @@ module Sinatra
 
     private
 
-    def create_pop3 account
-      Mail::POP3.new({:address => account.server_address,
-                      :user_name => account.address,
-                      :password => account.password,
-                      :port => account.port,
-                      :enable_ssl => account.ssl})
+    def pop3 account, &b
+      pop = Net::POP3.new(account.server_address, account.port)
+      if account.ssl
+        pop.enable_ssl(OpenSSL::SSL::VERIFY_NONE)
+      end
+      pop.start(account.address, account.password, &b)
     end
   end
 
