@@ -142,12 +142,10 @@ class Dredd < Sinatra::Base
         halt 404, 'Ce compte n\'existe pas'
       end
       begin
-        test_account account
-        account.update_after_connection true
-        body '<div class="messageOK">OK !</div>'
-      rescue Exception => e
-        account.update_after_connection false, error_2_text(e)
-        body "<div class=\"messageKO\">#{error_2_html(e)}</div>"
+        found_messages = check_accounts([account])
+        body "<div class=\"messageOK\">OK, #{found_messages} message(s) trouvé(s) </div>"
+      rescue RuntimeError => e
+        body "<div class=\"messageKO\">#{e.message}</div>"
       end
     end
   end
@@ -204,7 +202,7 @@ class Dredd < Sinatra::Base
 
   post '/config' do
     if check_logged
-      ['email_from', 'email_to', 'email_header', 'email_subject'].each do |key|
+      ['email_from', 'email_to', 'email_subject', 'email_body'].each do |key|
         if Meta.filter(:name => key).count == 0
           meta = Meta.new
           meta.name = key
@@ -234,6 +232,8 @@ class Dredd < Sinatra::Base
         message.to = to
         message.subject = subject
         message.body = body
+        d = DateTime.now
+        message.sent_at = DateTime.civil(d.year, d.month, d.day, d.hour, d.min, d.sec, d.offset)
         message.save
         send_message message
         flash[:notice] = 'Mail envoyé'
@@ -245,36 +245,48 @@ class Dredd < Sinatra::Base
     end
   end
 
-
-  get '/stylesheet.css' do
-    content_type 'text/css', :charset => 'utf-8'
-    sass :stylesheet
+  get '/check_all' do
+    if check_logged_or_password
+      begin
+        found_messages = check_accounts(Account.where(:enabled => true))
+        flash[:notice] = "OK, #{found_messages} message(s) trouvé(s)"
+      rescue RuntimeError => e
+        flash[:error] = e.message
+      end
+      redirect '/admin'
   end
+end
 
-  private
 
-  def check_logged
-    true
-    #if @user_logged
-    #  true
-    #else
-    #  redirect '/login'
-    #  false
-    #end
-  end
+get '/stylesheet.css' do
+  content_type 'text/css', :charset => 'utf-8'
+  sass :stylesheet
+end
 
-  def check_logged_ajax
-    true
-    #if @user_logged
-    #  true
-    #else
-    #  'Réservé aux administrateurs'
-    #  false
-    #end
-  end
+private
 
-  def check_logged_or_password
-    true
-  end
+def check_logged
+  true
+  #if @user_logged
+  #  true
+  #else
+  #  redirect '/login'
+  #  false
+  #end
+end
+
+def check_logged_ajax
+  true
+  #if @user_logged
+  #  true
+  #else
+  #  'Réservé aux administrateurs'
+  #  false
+  #end
+end
+
+def check_logged_or_password
+  true
+end
 
 end

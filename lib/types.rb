@@ -87,21 +87,37 @@ class Account < Sequel::Model
 
 end
 
-migration "create table messages" do
+migration "create table original_messages" do
   database.create_table :original_messages do
     primary_key :id, :type=>Integer, :null => false
     String :from, :null => false
     String :to, :null => false
     String :subject, :null => false
     Text :body, :null => false
-    DateTime :created_at, :null => false
-    DateTime :updated_at
+    DateTime :sent_at, :null => false, :index => true, :unique => true
   end
 end
 
 class OriginalMessage < Sequel::Model
 
-  plugin :timestamps
+  one_to_many :received_messages
 
 end
 
+migration "create table received_messages" do
+  database.create_table :received_messages do
+    primary_key :id, :type=>Integer, :null => false
+
+    DateTime :received_at, :null => false
+    Text :raw_content, :null => false
+
+    foreign_key :original_message_id, :original_messages, :null => false
+  end
+end
+
+class ReceivedMessage < Sequel::Model
+
+  many_to_one :original_message
+
+
+end

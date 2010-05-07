@@ -87,7 +87,7 @@ module Sinatra
     end
 
     def error_2_html e
-      ([e.class, e.message] + e.backtrace).join('<br/>')
+      ([e.class, e.message] + e.backtrace).join('<br/>') + '<br/>'
     end
 
     def error_text_2_html e
