@@ -52,6 +52,7 @@ end
 
 class Account < Sequel::Model
 
+  one_to_many :received_messages
   plugin :timestamps
 
   def validate
@@ -109,8 +110,10 @@ migration "create table received_messages" do
     primary_key :id, :type=>Integer, :null => false
 
     DateTime :received_at, :null => false
+    Integer :delay, :null => false
     Text :raw_content, :null => false
 
+    foreign_key :account_id, :accounts, :null => false
     foreign_key :original_message_id, :original_messages, :null => false
   end
 end
@@ -118,6 +121,7 @@ end
 class ReceivedMessage < Sequel::Model
 
   many_to_one :original_message
+  many_to_one :account
 
 
 end

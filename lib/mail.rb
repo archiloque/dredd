@@ -37,11 +37,13 @@ module Sinatra
 
                 # look for the original message
                 original_message = OriginalMessage.where(:sent_at => timestamp_value).first
-                if original_message
+                if original_message && (ReceivedMessage.where(:account_id => account.id).where(:original_message_id => original_message.id).count == 0)
                   received_message = ReceivedMessage.new
                   received_message.original_message = original_message
+                  received_message.account = account
                   received_message.raw_content = raw_content
                   received_message.received_at = DateTime.parse(mail[:received][0].value.split(';').last)
+                  received_message.delay = (received_message.received_at.to_f - original_message.sent_at.to_f).to_i
                   received_message.save
                   found_messages += 1
                 end
