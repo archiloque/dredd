@@ -24,7 +24,7 @@ module Sinatra
     def check_accounts accounts
       found_messages = 0
       exception_message = ''
-      original_messages = Hash.new{ |hash, key| hash[key] = OriginalMessage.where(:sent_at => key).first }
+      original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:sent_at => key).first }
       accounts.each do |account|
         begin
           pop3(account) do |pop|
@@ -56,6 +56,17 @@ module Sinatra
           account.update_after_connection false, error_2_text(e)
           exception_message << error_2_html(e)
         end
+      end
+      original_messages_to_update = original_messages.values.compact.collect { |original_message| original_message.id }.join(', ')
+      if original_messages_to_update != ''
+        database.run("update original_messages
+                    set average_time_to_receive =
+                      (select avg(received_messages.delay) from received_messages
+                        where original_messages.id = received_messages.original_message_id),
+                    slower_received_message_id =
+                      (select received_messages.id from received_messages
+                        where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)
+                    where id in (#{original_messages_to_update})")
       end
       if exception_message != ''
         raise exception_message
