@@ -24,6 +24,7 @@ module Sinatra
     def check_accounts accounts
       found_messages = 0
       exception_message = ''
+      original_messages = Hash.new{ |hash, key| hash[key] = OriginalMessage.where(:sent_at => key).first }
       accounts.each do |account|
         begin
           pop3(account) do |pop|
@@ -36,7 +37,7 @@ module Sinatra
                 timestamp_value = Time.at(match[1].to_i).to_datetime
 
                 # look for the original message
-                original_message = OriginalMessage.where(:sent_at => timestamp_value).first
+                original_message = original_messages[timestamp_value]
                 if original_message && (ReceivedMessage.where(:account_id => account.id).where(:original_message_id => original_message.id).count == 0)
                   received_message = ReceivedMessage.new
                   received_message.original_message = original_message
