@@ -102,6 +102,7 @@ end
 class OriginalMessage < Sequel::Model
 
   one_to_many :received_messages
+  plugin :lazy_attributes, :body, :subject, :to, :from
 
 end
 
@@ -122,6 +123,6 @@ class ReceivedMessage < Sequel::Model
 
   many_to_one :original_message
   many_to_one :account
-
+  plugin :lazy_attributes, :raw_content
 
 end
