@@ -1,15 +1,11 @@
 <% @enabled_accounts.each do |account| %>
-  <p>
-    <%= "<a href=\"/accounts/#{account.name}\">#{account.name}</a>" %>
-  </p>
+  <%= partial(:'accounts/link_to_account', :locals => {:account => account}) %>
 <% end %>
 
 <p></p>
 
 <% @disabled_accounts.each do |account| %>
-  <p>
-    <%= "<a href=\"/accounts/#{account.name}\">#{account.name}</a>" %>
-  </p>
+  <%= partial(:'accounts/link_to_account', :locals => {:account => account}) %>
 <% end %>
 
 <% if @user_logged %>

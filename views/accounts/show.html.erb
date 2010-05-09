@@ -1,3 +1,55 @@
+<div id="graph"></div>
+<div id="legend"></div>
+
+<script>
+  <%
+   original_messages_hash = {}
+   @original_messages.each{|original_message| original_messages_hash[original_message.id] = original_message}
+
+  plot_data = []
+  @received_messages.each do |received_message|
+    original_message = original_messages_hash.delete(received_message.original_message_id)
+    if original_message
+      plot_data << [(original_message.sent_at.to_i * 1000), received_message.delay]
+    end
+  end
+  miss_data = []
+  original_messages_hash.each_value do |original_message|
+    miss_data << [original_message.sent_at.to_i * 1000, 0]
+  end
+
+  %>
+
+  <%= "var plot_data = #{plot_data.to_json};
+      var miss_data = #{miss_data.to_json}"%>
+
+  $.plot($("#graph"),
+          [
+            { label: "Délai en secondes", data: plot_data, lines: { show: true }},
+            { label: "Mails manquants", data: miss_data, lines: { show: false }}
+          ],
+  {
+    series: {
+      points: { show: true }
+    },
+    xaxis: { mode: "time" },
+    yaxis: { min: 0},
+    grid: { hoverable: true, clickable: true },
+    legend: { show: true, container: $("#legend") }
+  });
+
+</script>
+<fieldset>
+  <legend>Infos</legend>
+  <%= value('Heure de dernière connection', affiche_date_heure(@account.last_connection_date)) %>
+  <%= value('Connection réussie', (@account.last_connection_successful ? 'oui' : 'non')) %>
+  <% if @account.last_connection_error_message %>
+    <%= value_under('Message d\'erreur de connection:', (error_text_2_html(@account.last_connection_error_message))) %>
+  <% end %>
+  <%= value_checkbox('Activé', @account.enabled) %>
+  <%= value('Création', affiche_date_heure(@account.created_at)) %>
+</fieldset>
+
 <fieldset>
   <legend>Connection</legend>
   <% if @user_logged %>
@@ -10,17 +62,6 @@
   <%= value_checkbox('SSL', @account.ssl) %>
   <%= value('Port', @account.port) %>
 </fieldset>
-<fieldset>
-  <legend>Infos</legend>
-  <%= value('Heure de dernière connection', affiche_date_heure(@account.last_connection_date)) %>
-  <%= value('Connection réussie', (@account.last_connection_successful ? 'oui' : 'non')) %>
-  <% if @account.last_connection_error_message %>
-    <%= value_under('Message d\'erreur de connection:', (error_text_2_html(@account.last_connection_error_message))) %>
-  <% end %>
-</fieldset>
-
-<%= value_checkbox('Activé', @account.enabled) %>
-<%= value('Création', affiche_date(@account.created_at)) %>
 
 <p>
   <% if @user_logged %>

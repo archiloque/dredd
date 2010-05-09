@@ -2,3 +2,4 @@
 .idea/*.*
 .idea/**/*.*
 dredd.sqlite3
+test.rb

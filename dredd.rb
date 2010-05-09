@@ -32,6 +32,8 @@ class Dredd < Sinatra::Base
   helpers Sinatra::DreddHelper
   require 'lib/mail'
   helpers Sinatra::DreddMailHelper
+  require 'lib/partials'
+  helpers Sinatra::Partials
 
   use Rack::Flash
 
@@ -56,6 +58,12 @@ class Dredd < Sinatra::Base
     @account = Account.where(:name => params[:name]).first
     if @account
       @title = @account.name
+      @original_messages = OriginalMessage.limit(100).order(:id.asc)
+      if @original_messages.empty?
+        @received_messages = []
+      else
+        @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first.id).where(:account_id => @account.id)
+      end
       erb :'accounts/show.html'
     else
       flash[:error] = 'Ce compte n\'existe pas'
@@ -254,39 +262,39 @@ class Dredd < Sinatra::Base
         flash[:error] = e.message
       end
       redirect '/admin'
+    end
   end
-end
 
 
-get '/stylesheet.css' do
-  content_type 'text/css', :charset => 'utf-8'
-  sass :stylesheet
-end
+  get '/stylesheet.css' do
+    content_type 'text/css', :charset => 'utf-8'
+    sass :stylesheet
+  end
 
-private
+  private
 
-def check_logged
-  true
-  #if @user_logged
-  #  true
-  #else
-  #  redirect '/login'
-  #  false
-  #end
-end
+  def check_logged
+    true
+    #if @user_logged
+    #  true
+    #else
+    #  redirect '/login'
+    #  false
+    #end
+  end
 
-def check_logged_ajax
-  true
-  #if @user_logged
-  #  true
-  #else
-  #  'Réservé aux administrateurs'
-  #  false
-  #end
-end
+  def check_logged_ajax
+    true
+    #if @user_logged
+    #  true
+    #else
+    #  'Réservé aux administrateurs'
+    #  false
+    #end
+  end
 
-def check_logged_or_password
-  true
-end
+  def check_logged_or_password
+    true
+  end
 
 end
