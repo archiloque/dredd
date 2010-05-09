@@ -43,6 +43,7 @@ class Dredd < Sinatra::Base
   end
 
   get '/' do
+    @title = 'Messages'
     @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).limit(100)
     erb :'index.html'
   end
