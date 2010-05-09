@@ -29,7 +29,41 @@ function showTooltip(x, y, contents) {
 }
 
 $(function () {
-    $("#graph").bind("plothover", function (event, pos, item) {
+    $("#graphGeneral").bind("plothover", function (event, pos, item) {
+        $("#x").text(pos.x.toFixed(2));
+        $("#y").text(pos.y.toFixed(2));
+
+        if (item) {
+            if (previousPoint != item.datapoint) {
+                previousPoint = item.datapoint;
+
+                $("#tooltip").remove();
+                var date = new Date(item.datapoint[0]);
+                var toolTipString = zeroPad(date.getDate(), 2) + '/' + zeroPad(date.getMonth(), 2) + '/' + zeroPad(date.getFullYear(), 4) + ' ' + zeroPad(date.getHours(), 2) + ':' + zeroPad(date.getMinutes(), 2) + ':' + zeroPad(date.getSeconds(), 2) + " &rarr; " + item.datapoint[1] + "s";
+                if (item.seriesIndex == 1) {
+                    toolTipString += " " + max_data_info[item.dataIndex][0];
+                }
+                showTooltip(item.pageX, item.pageY,
+                        toolTipString);
+            }
+        }
+        else {
+            $("#tooltip").remove();
+            previousPoint = null;
+        }
+    });
+
+    $("#graphGeneral").bind("plotclick", function (event, pos, item) {
+        if (item) {
+            if (item.seriesIndex == 1) {
+                $(location).attr("href", "/received_message/" + max_data_info[item.dataIndex][1]);
+            } else {
+                $(location).attr("href", "/original_message/" + avg_data_info[item.dataIndex]);
+            }
+        }
+    });
+
+    $("#graphAccount").bind("plothover", function (event, pos, item) {
         $("#x").text(pos.x.toFixed(2));
         $("#y").text(pos.y.toFixed(2));
 
@@ -50,10 +84,9 @@ $(function () {
         }
     });
 
-    $("#graph").bind("plotclick", function (event, pos, item) {
+    $("#graphAccount").bind("plotclick", function (event, pos, item) {
         if (item) {
-            $("#clickdata").text("You clicked point " + item.dataIndex + " in " + item.series.label + ".");
-            plot.highlight(item.series, item.datapoint);
+            $(location).attr("href", "/received_message/" + data_info[item.dataIndex]);
         }
     });
 });

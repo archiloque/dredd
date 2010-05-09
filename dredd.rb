@@ -43,6 +43,7 @@ class Dredd < Sinatra::Base
   end
 
   get '/' do
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).limit(100)
     erb :'index.html'
   end
 
@@ -58,7 +59,7 @@ class Dredd < Sinatra::Base
     @account = Account.where(:name => params[:name]).first
     if @account
       @title = @account.name
-      @original_messages = OriginalMessage.limit(100).order(:id.asc)
+      @original_messages = OriginalMessage.limit(100)
       if @original_messages.empty?
         @received_messages = []
       else
@@ -158,6 +159,30 @@ class Dredd < Sinatra::Base
     end
   end
 
+  get '/received_message/:id' do
+    received_message_hash = ReceivedMessage.eager_graph(:account, :original_message).where(:'received_messages`.`id' => params[:id]).first
+    unless received_message_hash
+      halt 404, 'Ce message n\'existe pas'
+    end
+    @received_message = received_message_hash[:received_messages]
+    @original_message = received_message_hash[:original_message]
+    @account = received_message_hash[:account]
+    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")} pour #{@account.name}"
+    erb :'messages/received.html'
+  end
+
+  get '/original_message/:id' do
+    original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where(:'original_messages`.`id' => params[:id]).first
+    unless original_message_hash
+      halt 404, 'Ce message n\'existe pas'
+    end
+    @original_message = original_message_hash[:original_messages]
+    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")}"
+    @received_messages = ReceivedMessage.eager_graph(:account).where(:original_message_id => @original_message.id).order('received_messages.delay asc')
+    @slower_received_message = original_message_hash[:slower_received_message]
+    @slower_received_message_account = original_message_hash[:account]
+    erb :'messages/original.html'
+  end
 
   get '/login' do
     @title = 'Login'

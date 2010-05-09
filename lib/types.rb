@@ -127,7 +127,7 @@ end
 class OriginalMessage < Sequel::Model
 
   one_to_many :received_messages
-  one_to_one :received_messages, :key => :slower_received_message_id
+  one_to_one :slower_received_message, :class => :ReceivedMessage, :primary_key => :slower_received_message_id, :key => :id
 
   plugin :lazy_attributes, :body, :subject, :to, :from
 

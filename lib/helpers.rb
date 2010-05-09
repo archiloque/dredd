@@ -76,9 +76,9 @@ module Sinatra
       end
     end
 
-    def affiche_date_heure date
+    def affiche_date_heure date, between = ''
       if date
-        date.strftime('%d/%m/%Y %H:%M:%S')
+        date.strftime("%d/%m/%Y #{between}%H:%M:%S")
       end
     end
 

@@ -1,4 +1,4 @@
-<div id="graph"></div>
+<div class="graph" id="graphAccount"></div>
 <div id="legend"></div>
 
 <script>
@@ -7,10 +7,12 @@
    @original_messages.each{|original_message| original_messages_hash[original_message.id] = original_message}
 
   plot_data = []
+  data_info = []
   @received_messages.each do |received_message|
     original_message = original_messages_hash.delete(received_message.original_message_id)
     if original_message
       plot_data << [(original_message.sent_at.to_i * 1000), received_message.delay]
+      data_info << received_message.id
     end
   end
   miss_data = []
@@ -21,9 +23,10 @@
   %>
 
   <%= "var plot_data = #{plot_data.to_json};
-      var miss_data = #{miss_data.to_json}"%>
+      var miss_data = #{miss_data.to_json};
+      var data_info = #{data_info.to_json};"%>
 
-  $.plot($("#graph"),
+  $.plot($("#graphAccount"),
           [
             { label: "Délai en secondes", data: plot_data, lines: { show: true }},
             { label: "Mails manquants", data: miss_data, lines: { show: false }}

@@ -1,0 +1,21 @@
+<fieldset>
+  <legend>Infos</legend>
+  <%= value('Compte', "<a href=\"/accounts#{@account.name}\">#{@account.name}</a>") %>
+  <% if @user_logged %>
+    <%= value('De', @original_message.from) %>
+    <%= value('À', @original_message.to) %>
+  <% end %>
+  <%= value('Envoi', "<a href=\"/original_message/#{@original_message.id}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
+  <% if @original_message.average_time_to_receive %>
+    <%= value('Temps moyen', "#{@original_message.average_time_to_receive}s") %>
+  <% end %>
+  <%= value('Délai pour ce compte', "#{@received_message.delay}s") %>
+  <br/>
+
+  <%= value('Sujet', @original_message.subject) %>
+  <% if @user_logged %>
+    <%= value_under('Contenu original', @original_message.body) %>
+    <br/>
+    <%= value_under('Contenu reçu', @received_message.raw_content) %>
+  <% end %>
+</fieldset>
