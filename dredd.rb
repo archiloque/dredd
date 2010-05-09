@@ -44,7 +44,7 @@ class Dredd < Sinatra::Base
 
   get '/' do
     @title = 'Messages'
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).limit(100)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order('original_message.id desc').limit(100)
     erb :'index.html'
   end
 
@@ -64,7 +64,7 @@ class Dredd < Sinatra::Base
       if @original_messages.empty?
         @received_messages = []
       else
-        @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first.id).where(:account_id => @account.id)
+        @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first.id).where(:account_id => @account.id).order('original_message_id asc')
       end
       erb :'accounts/show.html'
     else
