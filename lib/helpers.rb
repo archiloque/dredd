@@ -94,6 +94,10 @@ module Sinatra
       e.gsub "\n", "<br/>"
     end
 
+    def timestamp_2_datetime timestamp
+      Time.at(timestamp.to_i).to_datetime
+    end
+
   end
 
   helpers DreddHelper

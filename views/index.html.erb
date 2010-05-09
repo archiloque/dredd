@@ -1,5 +1,24 @@
 <div class="graph" id="graphGeneral"></div>
-<div id="legend"></div>
+
+<fieldset>
+  <p>
+    <input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label>
+  </p>
+  <p>
+    <input class="plotCheck" type="checkbox" name="Moyenne" checked="checked"> <label>Moyenne</label>
+  </p>
+  <% @enabled_accounts.each do |account| %>
+    <p>
+      <%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/accounts/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %>
+    </p>
+  <% end %>
+  <% @disabled_accounts.each do |account| %>
+    <p>
+      <%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/accounts/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %>
+    </p>
+  <% end %>
+</fieldset>
+
 
 <script>
   <%
@@ -7,6 +26,10 @@
   max_data = []
   max_data_info = []
   avg_data_info = []
+
+  # hash original_message_id => original_message
+  original_messages_by_id = {}
+
   @original_messages.each do |original_message_hash|
   original_message = original_message_hash[:original_messages]
     date = original_message.sent_at.to_i * 1000
@@ -19,28 +42,37 @@
       max_data << [date, slower_received_message.delay]
       max_data_info << [original_message_hash[:account].name, slower_received_message.id]
     end
+    original_messages_by_id[original_message.id] = original_message
   end
+
+  # hash account id => account name
+  accounts_by_id = {}
+
+  @accounts.each do |account|
+    accounts_by_id[account.id] = account.name
+  end
+
+  # hash account name => array of [message sent time, message delay]
+  messages = Hash.new{ |hash, key| hash[key] = [] }
+  @received_messages.each do |received_message|
+      messages[received_message.account_id] << [(original_messages_by_id[received_message.original_message_id].sent_at.to_i * 1000), received_message.delay]
+  end
+
+  dataset = {}
+  dataset['Maximum'] = {:label => 'Maximum', :data => max_data, :color => 0}
+  dataset['Moyenne'] = {:label => 'Moyenne', :data => avg_data, :color => 1}
+  color = 2
+  messages.each_pair do |index, value|
+    label = accounts_by_id[index]
+    dataset[label] = {:label => label, :data => value, :color => color }
+    color += 1
+  end
+
   %>
 
-  <%= "var avg_data = #{avg_data.to_json};
-      var max_data = #{max_data.to_json};
-      var max_data_info = #{max_data_info.to_json};
-      var avg_data_info = #{avg_data_info.to_json}"%>
+  <%= "var dataset = #{dataset.to_json};"%>
+  var current_dataset = [dataset[0], dataset[1]];
 
-  $.plot($("#graphGeneral"),
-          [
-            { label: "Temps moyen (en secondes)", data: avg_data},
-            { label: "Dernier arrivé (en secondes)", data: max_data}
-          ],
-  {
-    series: {
-      points: { show: true },
-      lines: { show: true }
-    },
-    xaxis: { mode: "time" },
-    yaxis: { min: 0},
-    grid: { hoverable: true, clickable: true },
-    legend: { show: true, container: $("#legend") }
-  });
+  plotAccordingToChoices();
 
 </script>

@@ -5,9 +5,9 @@
     <%= value('De', @original_message.from) %>
     <%= value('À', @original_message.to) %>
   <% end %>
-  <%= value('Envoi', "<a href=\"/original_message/#{@original_message.id}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
+  <%= value('Envoi', "<a href=\"/messages/#{@original_message.sent_at.to_i}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
   <% if @original_message.average_time_to_receive %>
-    <%= value('Temps moyen', "#{@original_message.average_time_to_receive}s") %>
+    <%= value('Délai d\'arrivée moyen pour ce message', "#{@original_message.average_time_to_receive}s") %>
   <% end %>
   <%= value('Délai pour ce compte', "#{@received_message.delay}s") %>
   <br/>

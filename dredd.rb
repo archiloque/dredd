@@ -44,33 +44,48 @@ class Dredd < Sinatra::Base
 
   get '/' do
     @title = 'Messages'
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order('original_message.id desc').limit(100)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order('original_message.id asc').limit(100)
+    @accounts = Account.order(:name)
+    @enabled_accounts = Account.where(:enabled => true).order(:name)
+    @disabled_accounts = Account.where(:enabled => false).order(:name)
+    if @original_messages.empty?
+      @received_messages = []
+    else
+      @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first[:original_messages].id).order('original_message_id asc')
+    end
     erb :'index.html'
   end
 
+  get '/accounts/:name/:timestamp' do
+    @account = Account.where(:name => params[:name]).first
+    unless @account
+      halt 404, 'Ce compte n\'existe pas'
+    end
 
-  get '/accounts/?' do
-    @title = 'Comptes'
-    @enabled_accounts = Account.where(:enabled => true).order(:name)
-    @disabled_accounts = Account.where(:enabled => false).order(:name)
-    erb :'accounts/list.html'
+    received_message_hash = ReceivedMessage.eager_graph(:account, :original_message).where(:'original_message`.`sent_at' => timestamp_2_datetime(params[:timestamp])).first
+    unless received_message_hash
+      halt 404, 'Ce message n\'existe pas !'
+    end
+    @received_message = received_message_hash[:received_messages]
+    @original_message = received_message_hash[:original_message]
+    @account = received_message_hash[:account]
+    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")} pour #{@account.name}"
+    erb :'messages/received.html'
   end
 
   get '/accounts/:name' do
     @account = Account.where(:name => params[:name]).first
-    if @account
-      @title = @account.name
-      @original_messages = OriginalMessage.limit(100)
-      if @original_messages.empty?
-        @received_messages = []
-      else
-        @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first.id).where(:account_id => @account.id).order('original_message_id asc')
-      end
-      erb :'accounts/show.html'
-    else
-      flash[:error] = 'Ce compte n\'existe pas'
-      redirect '/accounts'
+    unless @account
+      halt 404, 'Ce compte n\'existe pas'
     end
+    @title = @account.name
+    @original_messages = OriginalMessage.limit(100)
+    if @original_messages.empty?
+      @received_messages = []
+    else
+      @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first.id).where(:account_id => @account.id).order('original_message_id asc')
+    end
+    erb :'accounts/show.html'
   end
 
   get '/edit_account/:name' do
@@ -149,7 +164,7 @@ class Dredd < Sinatra::Base
     if check_logged_ajax
       account = Account.where(:name => params[:name]).first
       unless account
-        halt 404, 'Ce compte n\'existe pas'
+        halt 404, 'Ce compte n\'existe pas !'
       end
       begin
         found_messages = check_accounts([account])
@@ -160,22 +175,10 @@ class Dredd < Sinatra::Base
     end
   end
 
-  get '/received_message/:id' do
-    received_message_hash = ReceivedMessage.eager_graph(:account, :original_message).where(:'received_messages`.`id' => params[:id]).first
-    unless received_message_hash
-      halt 404, 'Ce message n\'existe pas'
-    end
-    @received_message = received_message_hash[:received_messages]
-    @original_message = received_message_hash[:original_message]
-    @account = received_message_hash[:account]
-    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")} pour #{@account.name}"
-    erb :'messages/received.html'
-  end
-
-  get '/original_message/:id' do
-    original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where(:'original_messages`.`id' => params[:id]).first
+  get '/messages/:timestamp' do
+    original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where(:'original_messages`.`sent_at' => timestamp_2_datetime(params[:timestamp])).first
     unless original_message_hash
-      halt 404, 'Ce message n\'existe pas'
+      halt 404, 'Ce message n\'existe pas !'
     end
     @original_message = original_message_hash[:original_messages]
     @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")}"

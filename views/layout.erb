@@ -11,8 +11,7 @@
 </head>
 <body>
 <div id="navigation">
-  <a href="/">Index</a>
-  <a href="/accounts">Comptes</a>
+  <a href="/">Messages</a>
   <% if @user_logged %>
     <a href="/admin">Administration</a>
     <a href="/config">Configuration</a>
@@ -21,6 +20,9 @@
     <a href="/login">Login</a>
   <% end %>
 </div>
+
+<div id="legend"></div>
+
 <div id="content">
 
   <% if @title %>

@@ -34,7 +34,7 @@ module Sinatra
               # does the message id match our regexp ?
               match = MESSAGE_ID_REGEXP.match(mail.message_id)
               if match
-                timestamp_value = Time.at(match[1].to_i).to_datetime
+                timestamp_value = timestamp_2_datetime(match[1])
 
                 # look for the original message
                 original_message = original_messages[timestamp_value]

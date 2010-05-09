@@ -10,7 +10,7 @@
     <%= value('Temps moyen', "#{@original_message.average_time_to_receive}s") %>
   <% end %>
   <% if @slower_received_message %>
-    <%= value('Plus lent', "#{@slower_received_message.delay}s pour <a href=\"received_message/#{@slower_received_message.id}\">#{@slower_received_message_account.name}</a>") %>
+    <%= value('Plus lent', "#{@slower_received_message.delay}s pour <a href=\"/accounts/#{@slower_received_message_account.name}/#{@original_message.sent_at.to_i}\">#{@slower_received_message_account.name}</a>") %>
   <% end %>
 
   <br/>
@@ -21,8 +21,8 @@
   <% end %>
 </fieldset>
 <fieldset>
-  <legend>Messages reçus</legend>
+  <legend>Comptes et délai d'arrivée</legend>
   <% @received_messages.each do |received_message_hash| %>
-    <%= value("<a href=\"/received_message/#{received_message_hash[:received_messages].id}\">#{received_message_hash[:account].name}</a>", "#{received_message_hash[:received_messages].delay}s") %>
+    <%= value("<a href=\"/accounts/#{received_message_hash[:account].name}/#{@original_message.sent_at.to_i}\">#{received_message_hash[:account].name}</a>", "#{received_message_hash[:received_messages].delay}s") %>
   <% end %>
 </fieldset>
