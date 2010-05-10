@@ -2,7 +2,6 @@ require 'rubygems'
 require 'bundler'
 require 'logger'
 require 'andand'
-require 'sass'
 
 Bundler.setup
 
@@ -292,12 +291,6 @@ class Dredd < Sinatra::Base
       end
       redirect '/admin'
     end
-  end
-
-
-  get '/stylesheet.css' do
-    content_type 'text/css', :charset => 'utf-8'
-    sass :stylesheet
   end
 
   private
