@@ -293,6 +293,11 @@ class Dredd < Sinatra::Base
     end
   end
 
+  get '/about' do
+    @title = 'À propos'
+    erb :'about.html'
+  end
+
   private
 
   def check_logged
