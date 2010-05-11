@@ -12,6 +12,7 @@
 <body>
 <div id="navigation">
   <a href="/">Messages</a>
+  <a href="/about">À propos</a>
   <% if @user_logged %>
     <a href="/admin">Administration</a>
     <a href="/config">Configuration</a>
@@ -19,7 +20,6 @@
   <% else %>
     <a href="/login">Login</a>
   <% end %>
-  <a href="/about">À propos</a>
 </div>
 
 <div id="lateral">

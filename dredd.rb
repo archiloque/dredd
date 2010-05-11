@@ -43,6 +43,9 @@ class Dredd < Sinatra::Base
     database.loggers << Logger.new(STDOUT)
     ALWAYS_LOGGED = true
   end
+  configure :production do
+    ALWAYS_LOGGED = false
+  end
 
   # open id
   use Rack::Session::Pool
@@ -60,8 +63,7 @@ class Dredd < Sinatra::Base
   use Rack::Flash
 
   before do
-    # @user_logged = session[:user]
-    @user_logged = true
+    @user_logged = session[:user]
   end
 
   get '/' do
