@@ -36,7 +36,12 @@ class Dredd < Sinatra::Base
   set :views, File.dirname(__FILE__) + '/views'
   set :public, File.dirname(__FILE__) + '/public'
 
-  database.loggers << Logger.new(STDOUT)
+  root_dir = File.dirname(__FILE__)
+  set :app_file, File.join(root_dir, 'dredd.rb')
+
+  configure :development do
+    database.loggers << Logger.new(STDOUT)
+  end
 
   # open id
   use Rack::Session::Pool
@@ -98,7 +103,7 @@ class Dredd < Sinatra::Base
     if original_messages.empty?
       @received_messages = []
     else
-      original_messages.each{|original_message| @original_messages_hash[original_message.id] = original_message}
+      original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
       min_message_id = @original_messages_hash[@original_messages_hash.keys.min].id
       max_message_id = @original_messages_hash[@original_messages_hash.keys.max].id
       @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order('original_message_id asc')
@@ -138,7 +143,7 @@ class Dredd < Sinatra::Base
       @received_messages = ReceivedMessage.where('original_message_id >= ?', original_messages.first.id).where(:account_id => @account.id).order('original_message_id asc')
     end
     @original_messages_hash = {}
-    original_messages.each{|original_message| @original_messages_hash[original_message.id] = original_message}
+    original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
 
     render_received_messages
   end
