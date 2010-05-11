@@ -41,6 +41,7 @@ class Dredd < Sinatra::Base
 
   configure :development do
     database.loggers << Logger.new(STDOUT)
+    ALWAYS_LOGGED = true
   end
 
   # open id
@@ -278,13 +279,14 @@ class Dredd < Sinatra::Base
       @email_to = Meta.where(:name => 'email_to').first.andand.value
       @email_subject = Meta.where(:name => 'email_subject').first.andand.value
       @email_body = Meta.where(:name => 'email_body').first.andand.value
+      @backend_password = Meta.where(:name => 'backend_password').first.andand.value
       erb :'admin/config.html'
     end
   end
 
   post '/config' do
     if check_logged
-      ['email_from', 'email_to', 'email_subject', 'email_body'].each do |key|
+      ['email_from', 'email_to', 'email_subject', 'email_body', 'backend_password'].each do |key|
         if Meta.filter(:name => key).count == 0
           meta = Meta.new
           meta.name = key
@@ -303,19 +305,9 @@ class Dredd < Sinatra::Base
 
 
   post '/send_mail' do
-    if check_logged_or_password
-      from = Meta.where(:name => 'email_from').first.andand.value
-      to = Meta.where(:name => 'email_to').first.andand.value
-      subject = Meta.where(:name => 'email_subject').first.andand.value
-      body = Meta.where(:name => 'email_body').first.andand.value
-      if (from && to && subject && body)
-        message = OriginalMessage.new
-        message.from = from
-        message.to = to
-        message.subject = subject
-        message.body = body
-        d = DateTime.now
-        message.sent_at = DateTime.civil(d.year, d.month, d.day, d.hour, d.min, d.sec, d.offset)
+    if check_logged
+      message = create_message
+      if message
         message.save
         send_message message
         flash[:notice] = 'Mail envoyé'
@@ -328,7 +320,7 @@ class Dredd < Sinatra::Base
   end
 
   get '/check_all' do
-    if check_logged_or_password
+    if check_logged
       begin
         found_messages = check_accounts(Account.where(:enabled => true))
         flash[:notice] = "OK, #{found_messages} message(s) trouvé(s)"
@@ -342,6 +334,32 @@ class Dredd < Sinatra::Base
   get '/about' do
     @title = 'À propos'
     erb :'about.html'
+  end
+
+  get '/backend_send_mail/:backend_password' do
+    check_backend
+
+    begin
+      message = create_message
+      if message
+        message.save
+        send_message message
+        halt 201, 'Mail envoyé'
+      else
+        halt 403, 'Il manque des valeurs'
+      end
+    end
+  end
+
+  get '/backend_check_mail/:backend_password' do
+    check_backend
+
+    begin
+      found_messages = check_accounts(Account.where(:enabled => true))
+      halt 200, "#{found_messages} nouveau(x) message(s)"
+    rescue RuntimeError => e
+      halt 500, e.message
+    end
   end
 
   private
@@ -379,27 +397,27 @@ class Dredd < Sinatra::Base
   end
 
   def check_logged
-    true
-    #if @user_logged
-    #  true
-    #else
-    #  redirect '/login'
-    #  false
-    #end
+    if ALWAYS_LOGGED || @user_logged
+      true
+    else
+      redirect '/login'
+      false
+    end
   end
 
   def check_logged_ajax
-    true
-    #if @user_logged
-    #  true
-    #else
-    #  'Réservé aux administrateurs'
-    #  false
-    #end
+    if ALWAYS_LOGGED || @user_logged
+      true
+    else
+      body 'Réservé aux administrateurs'
+      false
+    end
   end
 
-  def check_logged_or_password
-    true
+  def check_backend
+    unless ALWAYS_LOGGED || (params[:backend_password] == Meta.where(:name => 'backend_password').first.andand.value)
+      halt 403, 'Réservé aux administrateurs'
+    end
   end
 
 end

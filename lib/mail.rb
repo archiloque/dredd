@@ -75,6 +75,25 @@ module Sinatra
       end
     end
 
+    def create_message
+      from = Meta.where(:name => 'email_from').first.andand.value
+      to = Meta.where(:name => 'email_to').first.andand.value
+      subject = Meta.where(:name => 'email_subject').first.andand.value
+      body = Meta.where(:name => 'email_body').first.andand.value
+      if (from && to && subject && body)
+        message = OriginalMessage.new
+        message.from = from
+        message.to = to
+        message.subject = subject
+        message.body = body
+        d = DateTime.now
+        message.sent_at = DateTime.civil(d.year, d.month, d.day, d.hour, d.min, d.sec, d.offset)
+        message
+      else
+        nil
+      end
+    end
+
     def send_message original_message
       mail = Mail.new do
         from original_message.from
