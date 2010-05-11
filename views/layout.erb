@@ -22,7 +22,22 @@
   <a href="/about">À propos</a>
 </div>
 
-<div id="legend"></div>
+<div id="lateral">
+  <div id="legend"></div>
+  <% if @calendar_min_date %>
+  <div id="calendarTitle">Historique:</div>
+  <ul id="calendar">
+    <% if @calendar_min_date %>
+      <% target_day = Date.civil(@calendar_min_date.year, @calendar_min_date.month, 1) %>
+      <% current_day = Date.civil(Date.today.year, Date.today.month, 1) %>
+      <% while current_day >= target_day %>
+        <li><%= "<a href=\"#{@calendar_base_url}#{current_day.strftime('%Y/%m')}\">#{current_day.strftime('%m / %Y')}</a>" %></li>
+        <% current_day = current_day << 1 %>
+      <% end %>
+    <% end %>
+</ul>
+  <% end %>
+</div>
 
 <div id="content">
 

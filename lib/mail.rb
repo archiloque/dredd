@@ -81,7 +81,7 @@ module Sinatra
         to original_message.to
         subject original_message.subject
         body original_message.body
-        message_id "<#{original_message.sent_at.to_i}@dredd.listes.rezo.com>"
+        message_id "<#{Integer(original_message.sent_at.to_f)}@dredd.listes.rezo.com>"
       end
       mail.delivery_method :sendmail
       mail.deliver

@@ -1,11 +1,11 @@
 <fieldset>
   <legend>Infos</legend>
-  <%= value('Compte', "<a href=\"/accounts#{@account.name}\">#{@account.name}</a>") %>
+  <%= value('Compte', "<a href=\"/account/#{@account.name}\">#{@account.name}</a>") %>
   <% if @user_logged %>
     <%= value('De', @original_message.from) %>
     <%= value('À', @original_message.to) %>
   <% end %>
-  <%= value('Envoi', "<a href=\"/messages/#{@original_message.sent_at.to_i}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
+  <%= value('Envoi', "<a href=\"/message/#{Integer(@original_message.sent_at.to_f)}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
   <% if @original_message.average_time_to_receive %>
     <%= value('Délai d\'arrivée moyen pour ce message', "#{@original_message.average_time_to_receive}s") %>
   <% end %>

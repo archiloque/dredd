@@ -85,9 +85,9 @@ $(function () {
         if (item) {
             var label = item.series.label;
             if ((label == 'Maximum') || (label == 'Moyenne')) {
-                $(location).attr("href", "/messages/" + (item.datapoint[0] / 1000));
+                $(location).attr("href", "/message/" + (item.datapoint[0] / 1000));
             } else {
-                $(location).attr("href", "/accounts/" + label + "/" + (item.datapoint[0] / 1000));
+                $(location).attr("href", "/account/" + label + "/" + (item.datapoint[0] / 1000));
             }
         }
     });
@@ -119,9 +119,9 @@ $(function () {
     $("#graphAccount").bind("plotclick", function (event, pos, item) {
         if (item) {
             if (item.series.seriesindex == 0) {
-                $(location).attr("href", "/accounts/" + $("#title").html() + "/" + (item.datapoint[0] / 1000));
+                $(location).attr("href", "/message/" + (item.datapoint[0] / 1000));
             } else {
-                $(location).attr("href", "/messages/" + (item.datapoint[0] / 1000));
+                $(location).attr("href", "/account/" + accountName + "/" + (item.datapoint[0] / 1000));
             }
         }
     });

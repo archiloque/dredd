@@ -98,7 +98,7 @@ p {
 
 .graph {
   width: 700px;
-  height: 200px;
+  height: 300px;
   padding-bottom: 10px;
 }
 
@@ -107,8 +107,18 @@ p {
   padding-top: 10px;
 }
 
-#legend {
+#lateral {
   position: absolute;
-  top: 130px;
+  top: 160px;
   left: 20px;
+}
+
+#calendarTitle {
+  padding-top: 10px
+}
+#calendar {
+  padding-top: 5px
+}
+#calendar li {
+  list-style: none;
 }

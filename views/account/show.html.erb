@@ -4,25 +4,24 @@
 
 <div id="legend"></div>
 
-<script>
   <%
-   original_messages_hash = {}
-   @original_messages.each{|original_message| original_messages_hash[original_message.id] = original_message}
 
   plot_data = []
   @received_messages.each do |received_message|
-    original_message = original_messages_hash.delete(received_message.original_message_id)
+    original_message = @original_messages_hash.delete(received_message.original_message_id)
     if original_message
-      plot_data << [(original_message.sent_at.to_i * 1000), received_message.delay]
+      plot_data << [(Integer(original_message.sent_at.to_f) * 1000), received_message.delay]
     end
   end
   miss_data = []
-  original_messages_hash.each_value do |original_message|
-    miss_data << [original_message.sent_at.to_i * 1000, 0]
+  @original_messages_hash.each_value do |original_message|
+    miss_data << [Integer(original_message.sent_at.to_f) * 1000, 0]
   end
 
   %>
 
+<script>
+  var accountName = "<%= @account.name %>";
   $.plot($("#graphAccount"),
           [
             { label: "Délai (en secondes)", data: <%= plot_data.to_json %>, lines: { show: true }},
