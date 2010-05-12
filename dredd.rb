@@ -241,6 +241,10 @@ class Dredd < Sinatra::Base
     erb :'login.html'
   end
 
+  get '/ecrire' do
+    redirect '/login'
+  end
+
   post '/login' do
     if resp = request.env['rack.openid.response']
       if resp.status == :success
