@@ -35,6 +35,8 @@ class Dredd < Sinatra::Base
 
   set :views, File.dirname(__FILE__) + '/views'
   set :public, File.dirname(__FILE__) + '/public'
+  set :raise_errors, true
+  set :show_exceptions, :true
 
   root_dir = File.dirname(__FILE__)
   set :app_file, File.join(root_dir, 'dredd.rb')
@@ -44,7 +46,6 @@ class Dredd < Sinatra::Base
     ALWAYS_LOGGED = true
   end
   configure :production do
-    database.loggers << Logger.new('dredd.log')
     ALWAYS_LOGGED = false
   end
 
