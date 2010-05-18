@@ -2,8 +2,8 @@
 
   <%= input_text('account[name]', 'Nom du compte', @account.name) %>
 
-  <%= input_text('account[address]', 'Adresse mail', @account.address) %>
-  <%= input_text('account[server_address]', 'Adresse du serveur', @account.server_address) %>
+  <%= input_text('account[address]', 'Login pop', @account.address) %>
+  <%= input_text('account[server_address]', 'Serveur pop', @account.server_address) %>
   <%= input_text('account[password]', 'Mot de passe', @account.password) %>
   <%= input('account[port]', 'Port', @account.port, 'number') %>
   <%= input_checkbox('account[ssl]', 'SSL', @account.ssl) %>
