@@ -9,7 +9,8 @@ Bundler.setup
 require 'sinatra/base'
 require 'rack-flash'
 
-ENV['DATABASE_URL'] = "sqlite://#{Dir.pwd}/dredd.sqlite3"
+ENV['DATABASE_URL'] ||= "sqlite://#{Dir.pwd}/dredd.sqlite3"
+
 require 'sinatra'
 require 'sinatra/sequel'
 
@@ -294,7 +295,6 @@ class Dredd < Sinatra::Base
 
   post '/config' do
     if check_logged
-      database.transaction do
       ['email_from', 'email_to', 'email_subject', 'email_body', 'backend_password'].each do |key|
         if Meta.filter(:name => key).count == 0
           meta = Meta.new
@@ -309,7 +309,6 @@ class Dredd < Sinatra::Base
       end
       flash[:notice] = 'Données mises à jour'
       redirect '/config'
-      end
     end
   end
 
