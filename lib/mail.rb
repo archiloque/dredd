@@ -26,40 +26,43 @@ module Sinatra
       exception_message = ''
       original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:sent_at => key).first }
       accounts.each do |account|
-        begin
-          pop3(account) do |pop|
-            pop.each_mail do |m|
-              raw_content = m.pop
-              mail = Mail.new(raw_content)
-              # does the message id match our regexp ?
-              match = MESSAGE_ID_REGEXP.match(mail.message_id)
-              if match
-                timestamp_value = timestamp_2_datetime(match[1])
+        database.transaction do
+          begin
+            pop3(account) do |pop|
+              pop.each_mail do |m|
+                raw_content = m.pop
+                mail = Mail.new(raw_content)
+                # does the message id match our regexp ?
+                match = MESSAGE_ID_REGEXP.match(mail.message_id)
+                if match
+                  timestamp_value = timestamp_2_datetime(match[1])
 
-                # look for the original message
-                original_message = original_messages[timestamp_value]
-                if original_message && (ReceivedMessage.where(:account_id => account.id).where(:original_message_id => original_message.id).count == 0)
-                  received_message = ReceivedMessage.new
-                  received_message.original_message = original_message
-                  received_message.account = account
-                  received_message.raw_content = raw_content
-                  received_message.received_at = DateTime.parse(mail[:received][0].value.split(';').last)
-                  received_message.delay = (received_message.received_at.to_f - original_message.sent_at.to_f).to_i
-                  received_message.save
-                  found_messages += 1
+                  # look for the original message
+                  original_message = original_messages[timestamp_value]
+                  if original_message && (ReceivedMessage.where(:account_id => account.id).where(:original_message_id => original_message.id).count == 0)
+                    received_message = ReceivedMessage.new
+                    received_message.original_message = original_message
+                    received_message.account = account
+                    received_message.raw_content = raw_content
+                    received_message.received_at = DateTime.parse(mail[:received][0].value.split(';').last)
+                    received_message.delay = (received_message.received_at.to_f - original_message.sent_at.to_f).to_i
+                    received_message.save
+                    found_messages += 1
+                  end
                 end
               end
             end
+            account.update_after_connection true
+          rescue Exception => e
+            account.update_after_connection false, error_2_text(e)
+            exception_message << error_2_html(e)
           end
-          account.update_after_connection true
-        rescue Exception => e
-          account.update_after_connection false, error_2_text(e)
-          exception_message << error_2_html(e)
         end
       end
       original_messages_to_update = original_messages.values.compact.collect { |original_message| original_message.id }.join(', ')
       if original_messages_to_update != ''
-        database.run("update original_messages
+        database.transaction do
+          database.run("update original_messages
                     set average_time_to_receive =
                       (select avg(received_messages.delay) from received_messages
                         where original_messages.id = received_messages.original_message_id),
@@ -67,6 +70,7 @@ module Sinatra
                       (select received_messages.id from received_messages
                         where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)
                     where id in (#{original_messages_to_update})")
+        end
       end
       if exception_message != ''
         raise exception_message
@@ -76,21 +80,23 @@ module Sinatra
     end
 
     def create_message
-      from = Meta.where(:name => 'email_from').first.andand.value
-      to = Meta.where(:name => 'email_to').first.andand.value
-      subject = Meta.where(:name => 'email_subject').first.andand.value
-      body = Meta.where(:name => 'email_body').first.andand.value
-      if (from && to && subject && body)
-        message = OriginalMessage.new
-        message.from = from
-        message.to = to
-        message.subject = subject
-        message.body = body
-        d = DateTime.now
-        message.sent_at = DateTime.civil(d.year, d.month, d.day, d.hour, d.min, d.sec, d.offset)
-        message
-      else
-        nil
+      database.transaction do
+        from = Meta.where(:name => 'email_from').first.andand.value
+        to = Meta.where(:name => 'email_to').first.andand.value
+        subject = Meta.where(:name => 'email_subject').first.andand.value
+        body = Meta.where(:name => 'email_body').first.andand.value
+        if (from && to && subject && body)
+          message = OriginalMessage.new
+          message.from = from
+          message.to = to
+          message.subject = subject
+          message.body = body
+          d = DateTime.now
+          message.sent_at = DateTime.civil(d.year, d.month, d.day, d.hour, d.min, d.sec, d.offset)
+          message
+        else
+          nil
+        end
       end
     end
 
