@@ -44,6 +44,7 @@ class Dredd < Sinatra::Base
     ALWAYS_LOGGED = true
   end
   configure :production do
+    database.loggers << Logger.new('dredd.log')
     ALWAYS_LOGGED = false
   end
 
@@ -292,6 +293,7 @@ class Dredd < Sinatra::Base
 
   post '/config' do
     if check_logged
+      database.transaction do
       ['email_from', 'email_to', 'email_subject', 'email_body', 'backend_password'].each do |key|
         if Meta.filter(:name => key).count == 0
           meta = Meta.new
@@ -306,6 +308,7 @@ class Dredd < Sinatra::Base
       end
       flash[:notice] = 'Données mises à jour'
       redirect '/config'
+      end
     end
   end
 
