@@ -106,11 +106,11 @@ $(function () {
                 $("#tooltip").remove();
                 var date = new Date(item.datapoint[0]);
                 var toolTipString = zeroPad(date.getUTCDate(), 2) + '/'
-                        + zeroPad(date.getUTCMonth()(), 2) + '/'
-                        + zeroPad(date.getUTCFullYear()(), 4) + ' '
+                        + zeroPad(date.getUTCMonth(), 2) + '/'
+                        + zeroPad(date.getUTCFullYear(), 4) + ' '
                         + zeroPad(date.getUTCHours(), 2) + ':'
                         + zeroPad(date.getUTCMinutes(), 2) + ':'
-                        + zeroPad(date.getUTCSeconds()(), 2) + " &rarr; "
+                        + zeroPad(date.getUTCSeconds(), 2) + " &rarr; "
                         + item.datapoint[1] + "s";
                 showTooltip(item.pageX, item.pageY,
                         toolTipString);
