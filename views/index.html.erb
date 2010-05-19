@@ -34,7 +34,7 @@
 
   @original_messages.each do |original_message_hash|
   original_message = original_message_hash[:original_messages]
-    date = Integer(original_message.sent_at.new_offset(0).to_f) * 1000
+    date = Integer(Sequel.database_timezone.local_to_utc(original_message.sent_at).to_f) * 1000
     if original_message.average_time_to_receive
       avg_data << [date, original_message.average_time_to_receive]
       avg_data_info << original_message.id
@@ -57,7 +57,7 @@
   # hash account name => array of [message sent time, message delay]
   messages = Hash.new{ |hash, key| hash[key] = [] }
   @received_messages.each do |received_message|
-      messages[received_message.account_id] << [(Integer(original_messages_by_id[received_message.original_message_id].sent_at.to_f) * 1000), received_message.delay]
+      messages[received_message.account_id] << [(Integer(Sequel.database_timezone.local_to_utc(original_messages_by_id[received_message.original_message_id].sent_at).to_f) * 1000), received_message.delay]
   end
 
   dataset = {}
