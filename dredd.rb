@@ -60,8 +60,6 @@ class Dredd < Sinatra::Base
   helpers Sinatra::DreddHelper
   require 'lib/mail'
   helpers Sinatra::DreddMailHelper
-  require 'lib/partials'
-  helpers Sinatra::Partials
 
   use Rack::Flash
 
