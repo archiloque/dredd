@@ -71,14 +71,14 @@ class Dredd < Sinatra::Base
 
   get '/' do
     @title = 'Messages'
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order('original_message.id asc').limit(100)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).asc).limit(100)
     render_original_messages
   end
 
   get '/message/:year/:month' do
     @title = "Messages #{params[:month]} / #{params[:year]}"
     date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order('original_message.id asc').where('sent_at >= ? and sent_at < ?', date, date >> 1)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
     render_original_messages
   end
 
@@ -90,7 +90,7 @@ class Dredd < Sinatra::Base
     end
     @original_message = original_message_hash[:original_messages]
     @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")}"
-    @received_messages = ReceivedMessage.eager_graph(:account).where(:original_message_id => @original_message.id).order('received_messages.delay asc')
+    @received_messages = ReceivedMessage.eager_graph(:account).where(:original_message_id => @original_message.id).order(:delay.qualify(:received_messages).asc)
     @slower_received_message = original_message_hash[:slower_received_message]
     @slower_received_message_account = original_message_hash[:account]
 
@@ -106,14 +106,14 @@ class Dredd < Sinatra::Base
     date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
 
     @original_messages_hash = {}
-    original_messages = OriginalMessage.order('id asc').where('sent_at >= ? and sent_at < ?', date, date >> 1)
+    original_messages = OriginalMessage.order(:id.asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
     if original_messages.empty?
       @received_messages = []
     else
       original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
       min_message_id = @original_messages_hash[@original_messages_hash.keys.min].id
       max_message_id = @original_messages_hash[@original_messages_hash.keys.max].id
-      @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order('original_message_id asc')
+      @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order(:original_message_id.asc)
     end
     @title = "#{@account.name} #{params[:month]} / #{params[:year]}"
     render_received_messages
@@ -148,7 +148,7 @@ class Dredd < Sinatra::Base
     if original_messages.empty?
       @received_messages = []
     else
-      @received_messages = ReceivedMessage.where('original_message_id >= ?', original_messages.first.id).where(:account_id => @account.id).order('original_message_id asc')
+      @received_messages = ReceivedMessage.where('original_message_id >= ?', original_messages.first.id).where(:account_id => @account.id).order(:original_message_id.asc)
     end
     @original_messages_hash = {}
     original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
@@ -381,11 +381,11 @@ class Dredd < Sinatra::Base
   end
 
   def render_original_messages
-    @accounts = Account.order('name asc')
+    @accounts = Account.order(:name.asc)
     if @original_messages.empty?
       @received_messages = []
     else
-      @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first[:original_messages].id).order('original_message_id asc')
+      @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first[:original_messages].id).order(:original_message_id.asc)
     end
 
     original_message_calendar
@@ -393,7 +393,7 @@ class Dredd < Sinatra::Base
   end
 
   def render_message_calendar
-    first_message = ReceivedMessage.eager_graph(:account, :original_message).order('original_message_id asc').where('account_id = ?', @account.id).first
+    first_message = ReceivedMessage.eager_graph(:account, :original_message).order(:original_message_id.asc).where('account_id = ?', @account.id).first
     if first_message
       @calendar_min_date = first_message[:original_message].sent_at
       @calendar_base_url = "/account/#{params[:name]}/"
