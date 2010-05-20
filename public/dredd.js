@@ -45,7 +45,14 @@ function plotAccordingToChoices() {
                 lines: { show: true }
             },
             xaxis: { mode: "time" },
-            yaxis: { min: 0},
+            yaxis: { min: 0,
+                transform: function (v) {
+                    return Math.sqrt(v);
+                },
+                inverseTransform: function (v) {
+                    return v * v;
+                }
+            },
             grid: { hoverable: true, clickable: true },
             legend: { show: true, container: $("#legend") }
         });
