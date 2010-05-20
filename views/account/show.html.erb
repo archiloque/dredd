@@ -4,21 +4,21 @@
 
 <div id="legend"></div>
 
-  <%
+<%
 
-  plot_data = []
-  @received_messages.each do |received_message|
-    original_message = @original_messages_hash.delete(received_message.original_message_id)
-    if original_message
-      plot_data << [(Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000), received_message.delay]
-    end
-  end
-  miss_data = []
-  @original_messages_hash.each_value do |original_message|
-    miss_data << [Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000, 0]
-  end
+   plot_data = []
+   @received_messages.each do |received_message|
+     original_message = @original_messages_hash.delete(received_message.original_message_id)
+     if original_message
+       plot_data << [(Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000), received_message.delay]
+     end
+   end
+   miss_data = []
+   @original_messages_hash.each_value do |original_message|
+     miss_data << [Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000, 0]
+   end
 
-  %>
+%>
 
 <script>
   var accountName = "<%= @account.name %>";
@@ -62,11 +62,10 @@
   <%= value('Port', @account.port) %>
 </fieldset>
 
-<p>
-  <% if @user_logged %>
+<% if @user_logged %>
+  <p>
     <a href="/edit_account/<%= @account.name %>">Éditer</a>
     <a href="#" onclick="testAccount('<%= @account.name %>')">Tester</a>
-  <% end %>
-  <a href="/accounts">Liste des comptes</a>
-</p>
+  </p>
+<% end %>
 <p id="zoneMessage"></p>
