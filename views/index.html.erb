@@ -1,23 +1,12 @@
-<div id="graphTitle">Délai d'arrivée du mail en secondes</div>
+<div id="graphTitle">Délai d'arrivée des mails en secondes</div>
 
 <div class="graph" id="graphGeneral"></div>
 
 <fieldset>
-  <p>
-    <input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label>
-  </p>
-  <p>
-    <input class="plotCheck" type="checkbox" name="Moyenne" checked="checked"> <label>Moyenne</label>
-  </p>
-  <% @enabled_accounts.each do |account| %>
-    <p>
-      <%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %>
-    </p>
-  <% end %>
-  <% @disabled_accounts.each do |account| %>
-    <p>
-      <%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %>
-    </p>
+  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label></span>
+  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Moyenne" checked="checked"> <label>Moyenne</label></span>
+  <% @accounts.each do |account| %>
+    <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %></span>
   <% end %>
 </fieldset>
 

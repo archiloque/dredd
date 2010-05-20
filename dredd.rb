@@ -380,8 +380,6 @@ class Dredd < Sinatra::Base
 
   def render_original_messages
     @accounts = Account.order('name asc')
-    @enabled_accounts = Account.where(:enabled => true).order(:name)
-    @disabled_accounts = Account.where(:enabled => false).order(:name)
     if @original_messages.empty?
       @received_messages = []
     else
