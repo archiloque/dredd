@@ -83,7 +83,8 @@ class Dredd < Sinatra::Base
   end
 
   get '/message/:timestamp' do
-    original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where('original_messages.sent_at = ?', timestamp_2_datetime(params[:timestamp])).first
+    message_datetime = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
+    original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where('original_messages.sent_at = ?', message_datetime).first
     unless original_message_hash
       halt 404, 'Ce message n\'existe pas !'
     end
@@ -124,7 +125,8 @@ class Dredd < Sinatra::Base
       halt 404, 'Ce compte n\'existe pas'
     end
 
-    received_message_hash = ReceivedMessage.eager_graph(:original_message).where('original_message.sent_at = ? and account_id = ?', timestamp_2_datetime(params[:timestamp]), @account.id).first
+    message_datetime = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
+    received_message_hash = ReceivedMessage.eager_graph(:original_message).where('original_message.sent_at = ? and account_id = ?', message_datetime, @account.id).first
     unless received_message_hash
       halt 404, 'Ce message n\'existe pas !'
     end
