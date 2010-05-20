@@ -35,8 +35,8 @@ fieldset {
 
 #content {
   position: absolute;
-  top: 80px;
-  left: 150px;
+  top: 60px;
+  left: 125px;
 }
 
 #title {
@@ -47,7 +47,7 @@ fieldset {
 
 #navigation {
   position: absolute;
-  top: 40px;
+  top: 10px;
   left: 150px;
   font-size: 16px;
 }
@@ -97,7 +97,7 @@ p {
 }
 
 .graph {
-  width: 700px;
+  width: 750px;
   height: 400px;
   padding-bottom: 10px;
 }
@@ -107,7 +107,7 @@ p {
   padding-top: 10px;
 }
 
-.plotSpan {
+.plotCheck {
   padding-right: 10px;
   padding-left: 10px;
 }
