@@ -69,12 +69,14 @@ class Dredd < Sinatra::Base
 
   get '/' do
     @title = 'Messages'
+    @show_points = true
     @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).limit(100)
     render_original_messages
   end
 
   get '/message/:year/:month' do
     @title = "Messages #{params[:month]} / #{params[:year]}"
+    @show_points = false
     date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
     @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
     render_original_messages
@@ -114,6 +116,7 @@ class Dredd < Sinatra::Base
       @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order(:original_message_id.asc)
     end
     @title = "#{@account.name} #{params[:month]} / #{params[:year]}"
+    @show_points = false
     render_received_messages
   end
 
@@ -141,7 +144,10 @@ class Dredd < Sinatra::Base
     unless @account
       halt 404, 'Ce compte n\'existe pas'
     end
+
     @title = @account.name
+    @show_points = true
+
     original_messages = OriginalMessage.limit(100)
     if original_messages.empty?
       @received_messages = []
