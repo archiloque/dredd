@@ -49,6 +49,9 @@ module Sinatra
                   found_messages += 1
                 end
               end
+              if ENV['delete_mails']
+                m.delete
+              end
             end
           end
           account.update_after_connection true
