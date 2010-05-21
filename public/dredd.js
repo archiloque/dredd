@@ -6,6 +6,7 @@ function testAccount(accountName) {
 
 var previousPoint = null;
 
+
 function zeroPad(num, count) {
     var numZeropad = num + '';
     while (numZeropad.length < count) {
@@ -13,6 +14,7 @@ function zeroPad(num, count) {
     }
     return numZeropad;
 }
+
 
 function showTooltip(x, y, contents) {
     $('<div id="tooltip">' + contents + '</div>').css({
@@ -27,7 +29,21 @@ function showTooltip(x, y, contents) {
     }).appendTo("body").fadeIn(200);
 }
 
-function plotAccordingToChoices() {
+
+function displayDateGeneral(date) {
+    if (date == null) {
+        minDisplayed = maxDisplayed = null;
+        showPoints = false;
+    } else {
+        minDisplayed = date;
+        maxDisplayed = date + (24 * 60 * 60 * 1000);
+        showPoints = true;
+    }
+    plotGeneral();
+}
+
+function plotGeneral() {
+
     var data = [];
 
     $(".plotCheck:checked").each(function () {
@@ -38,13 +54,17 @@ function plotAccordingToChoices() {
     });
 
     if (data.length > 0)
+
         $.plot($("#graphGeneral"), data,
         {
             series: {
-                points: { show: show_points },
+                points: { show: showPoints },
                 lines: { show: true }
             },
-            xaxis: { mode: "time" },
+            xaxis: { mode: "time",
+                min: minDisplayed,
+                max : maxDisplayed
+            },
             yaxis: { min: 0,
                 transform: function (v) {
                     return Math.sqrt(v);
@@ -56,6 +76,46 @@ function plotAccordingToChoices() {
             grid: { hoverable: true, clickable: true },
             legend: { show: true, container: $("#legend") }
         });
+}
+
+
+function displayDateAccount(date) {
+    if (date == null) {
+        minDisplayed = maxDisplayed = null;
+        showPoints = false;
+    } else {
+        minDisplayed = date;
+        maxDisplayed = date + (24 * 60 * 60 * 1000);
+        showPoints = true;
+    }
+    plotAccount();
+}
+
+function plotAccount() {
+    $.plot($("#graphAccount"),
+            [
+                { label: "Délai (en secondes)", data: plotData , lines: { show: true }},
+                { label: "Mails manquants", data: missData , lines: { show: false }}
+            ],
+    {
+        series: {
+            points: { show: showPoints }
+        },
+        xaxis: { mode: "time",
+            min: minDisplayed,
+            max : maxDisplayed
+        },
+        yaxis: { min: 0,
+            transform: function (v) {
+                return Math.sqrt(v);
+            },
+            inverseTransform: function (v) {
+                return v * v;
+            }
+        },
+        grid: { hoverable: true, clickable: true },
+        legend: { show: true, container: $("#legend") }
+    });
 }
 
 $(function () {
@@ -99,8 +159,7 @@ $(function () {
         }
     });
 
-    $(".plotCheck").click(plotAccordingToChoices);
-
+    $(".plotCheck").click(plotGeneral);
 
     $("#graphAccount").bind("plothover", function (event, pos, item) {
         $("#x").text(pos.x.toFixed(2));

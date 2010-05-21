@@ -69,17 +69,21 @@ class Dredd < Sinatra::Base
 
   get '/' do
     @title = 'Messages'
-    @show_points = true
+    @show_days = false
+
     @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).limit(100)
     render_original_messages
   end
 
-  get '/message/:year/:month' do
-    @title = "Messages #{params[:month]} / #{params[:year]}"
-    @show_points = false
-    date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
-    render_original_messages
+  ['/message/:year/:month/?', '/message/:year/:month/:day'].each do |path|
+    get path do
+      @title = "Messages #{params[:month]} / #{params[:year]}"
+      @show_days = true
+
+      date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
+      @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+      render_original_messages
+    end
   end
 
   get '/message/:timestamp' do
@@ -98,26 +102,30 @@ class Dredd < Sinatra::Base
     erb :'message.html'
   end
 
-  get '/account/:name/:year/:month' do
-    @account = Account.where(:name => params[:name]).first
-    unless @account
-      halt 404, 'Ce compte n\'existe pas'
-    end
-    date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
+  ['/account/:name/:year/:month/?', '/account/:name/:year/:month/:day'].each do |path|
+    get path do
+      @account = Account.where(:name => params[:name]).first
+      unless @account
+        halt 404, 'Ce compte n\'existe pas'
+      end
+      date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
 
-    @original_messages_hash = {}
-    original_messages = OriginalMessage.order(:id.asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
-    if original_messages.empty?
-      @received_messages = []
-    else
-      original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
-      min_message_id = @original_messages_hash[@original_messages_hash.keys.min].id
-      max_message_id = @original_messages_hash[@original_messages_hash.keys.max].id
-      @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order(:original_message_id.asc)
+      @original_messages_hash = {}
+      original_messages = OriginalMessage.order(:id.asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+      if original_messages.empty?
+        @received_messages = []
+      else
+        original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
+        min_message_id = @original_messages_hash[@original_messages_hash.keys.min].id
+        max_message_id = @original_messages_hash[@original_messages_hash.keys.max].id
+        @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order(:original_message_id.asc)
+      end
+
+      @title = "#{@account.name} #{params[:month]} / #{params[:year]}"
+      @show_days = true
+
+      render_received_messages
     end
-    @title = "#{@account.name} #{params[:month]} / #{params[:year]}"
-    @show_points = false
-    render_received_messages
   end
 
   get '/account/:name/:timestamp' do
@@ -146,8 +154,8 @@ class Dredd < Sinatra::Base
     end
 
     @title = @account.name
-    @show_points = true
-
+    @show_days = false
+    
     original_messages = OriginalMessage.limit(100)
     if original_messages.empty?
       @received_messages = []

@@ -4,7 +4,7 @@
     <%= value('De', @original_message.from) %>
     <%= value('À', @original_message.to) %>
   <% end %>
-  <%= value('Envoi', affiche_date_heure(@original_message.sent_at)) %>
+  <%= value('Envoi', "<a href=\"/message/#{@original_message.sent_at.strftime('%Y/%m/%d')}\">#{affiche_date_heure(@original_message.sent_at, '</a> à ')}") %>
 
   <% if @original_message.average_time_to_receive %>
     <%= value('Temps moyen', "#{@original_message.average_time_to_receive}s") %>

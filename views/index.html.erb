@@ -2,21 +2,10 @@
 
 <div class="graph" id="graphGeneral"></div>
 
-<fieldset>
-  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label></span>
-  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Moyenne" checked="checked"> <label>Moyenne</label></span>
-  <% @accounts.each do |account| %>
-    <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %></span>
-  <% end %>
-</fieldset>
-
-
 <script>
   <%
   avg_data = []
   max_data = []
-  max_data_info = []
-  avg_data_info = []
 
   # hash original_message_id => original_message
   original_messages_by_id = {}
@@ -44,11 +33,14 @@
     accounts_by_id[account.id] = account.name
   end
 
+  messages_ids = original_messages_by_id.keys
+  message_min = messages_ids.min
+  message_max = messages_ids.max
+
   # hash account name => array of [message sent time, message delay]
   messages = Hash.new{ |hash, key| hash[key] = [] }
   unless original_messages_by_id.empty?
-      messages_ids = original_messages_by_id.keys
-      ReceivedMessage.where(:original_message_id => messages_ids.min..messages_ids.max).order(:original_message_id.asc).each do |received_message|
+      ReceivedMessage.where(:original_message_id => message_min..message_max).order(:original_message_id.asc).each do |received_message|
         messages[received_message.account_id] << [(Integer(Sequel.database_timezone.utc_to_local(original_messages_by_id[received_message.original_message_id].sent_at).to_f) * 1000), received_message.delay]
     end
   end
@@ -65,10 +57,45 @@
 
   %>
 
+</script>
+
+<fieldset>
+  <% if @show_days %>
+    <p><a href="#" onclick="displayDateGeneral(null); return false;">Mois entier</a>
+      <% current_day = original_messages_by_id[message_min].sent_at %>
+      <% while current_day < (original_messages_by_id[message_max].sent_at + 1) do %>
+        <%= "<a href=\"#\" onclick=\"displayDateGeneral(Date.UTC(#{current_day.strftime("%Y, (%m-1), %d")}).valueOf());return false;\">#{current_day.strftime("%d")}</a>" %>
+        <% current_day += 1 %>
+      <% end %>
+    </p>
+  <% end %>
+
+  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label></span>
+  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Moyenne" checked="checked"> <label>Moyenne</label></span>
+  <% @accounts.each do |account| %>
+    <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %></span>
+  <% end %>
+</fieldset>
+
+<script>
   <%= "var dataset = #{dataset.to_json};"%>
   var current_dataset = [dataset[0], dataset[1]];
-  var show_points = <%= @show_points %>;
+  <% if @show_days %>
+    <% if params[:day] %>
+      var showPoints = true;
+      <%= "var minDisplayed = Date.UTC(#{original_messages_by_id[message_min].sent_at.strftime("%Y, (%m-1)")}, #{params[:day]}).valueOf();" %>
+      var maxDisplayed =  minDisplayed + (24 * 60 * 60 * 1000);
+    <% else %>
+      var showPoints = false;
+      var minDisplayed = null;
+      var maxDisplayed = null;
+    <% end %>
+  <% else %>
+    var showPoints = true;
+    var minDisplayed = null;
+    var maxDisplayed = null;
+  <% end %>
 
-  plotAccordingToChoices();
+  plotGeneral();
 
 </script>

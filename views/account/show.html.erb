@@ -5,6 +5,11 @@
 <div id="legend"></div>
 
 <%
+   if @show_days
+     messages_id = @original_messages_hash.keys
+     first_message_date = @original_messages_hash[messages_id.min].sent_at
+     last_message_date = @original_messages_hash[messages_id.max].sent_at
+   end
 
    plot_data = []
    @received_messages.each do |received_message|
@@ -22,29 +27,39 @@
 
 <script>
   var accountName = "<%= @account.name %>";
-  $.plot($("#graphAccount"),
-          [
-            { label: "Délai (en secondes)", data: <%= plot_data.to_json %>, lines: { show: true }},
-            { label: "Mails manquants", data: <%= miss_data.to_json %>, lines: { show: false }}
-          ],
-  {
-    series: {
-      points: { show: <%= @show_points %> }
-    },
-    xaxis: { mode: "time" },
-    yaxis: { min: 0,
-      transform: function (v) {
-        return Math.sqrt(v);
-      },
-      inverseTransform: function (v) {
-        return v * v;
-      }
-    },
-    grid: { hoverable: true, clickable: true },
-    legend: { show: true, container: $("#legend") }
-  });
+  <%= "var plotData = #{plot_data.to_json};" %>
+  <%= "var missData = #{miss_data.to_json};" %>
 
+  <% if @show_days %>
+    <% if params[:day] %>
+      var showPoints = true;
+      <%= "var minDisplayed = Date.UTC(#{first_message_date.strftime("%Y, (%m-1)")}, #{params[:day]}).valueOf();" %>
+      var maxDisplayed =  minDisplayed + (24 * 60 * 60 * 1000);
+    <% else %>
+      var showPoints = false;
+      var minDisplayed = null;
+      var maxDisplayed = null;
+    <% end %>
+  <% else %>
+    var showPoints = true;
+    var minDisplayed = null;
+    var maxDisplayed = null;
+  <% end %>
+
+  plotAccount();
 </script>
+
+<% if @show_days %>
+  <fieldset>
+      <a href="#" onclick="displayDateAccount(null); return false;">Mois entier</a>
+      <% current_day = first_message_date %>
+      <% while current_day < (last_message_date + 1) do %>
+        <%= "<a href=\"#\" onclick=\"displayDateAccount(Date.UTC(#{current_day.strftime("%Y, (%m-1), %d")}).valueOf());return false;\">#{current_day.strftime("%d")}</a>" %>
+        <% current_day += 1 %>
+      <% end %>
+  </fieldset>
+<% end %>
+
 <fieldset>
   <legend>Infos</legend>
   <%= value('Heure de dernière connection', affiche_date_heure(@account.last_connection_date)) %>
