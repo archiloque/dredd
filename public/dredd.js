@@ -41,7 +41,7 @@ function plotAccordingToChoices() {
         $.plot($("#graphGeneral"), data,
         {
             series: {
-                points: { show: true },
+                points: { show: show_points },
                 lines: { show: true }
             },
             xaxis: { mode: "time" },

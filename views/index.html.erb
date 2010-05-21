@@ -67,6 +67,7 @@
 
   <%= "var dataset = #{dataset.to_json};"%>
   var current_dataset = [dataset[0], dataset[1]];
+  var show_points = <%= @show_points %>;
 
   plotAccordingToChoices();
 
