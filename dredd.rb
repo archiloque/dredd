@@ -375,7 +375,7 @@ class Dredd < Sinatra::Base
 
   def original_message_calendar
     @calendar_min_date = OriginalMessage.order(:sent_at.asc).first.andand.sent_at
-    @calendar_base_url = '/messages/'
+    @calendar_base_url = '/message/'
   end
 
   def render_original_messages
