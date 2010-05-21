@@ -25,7 +25,7 @@ module Sequel
       begin
         from(name).first
         true
-      rescue Exception => e
+      rescue Exception
         false
       end
     end
@@ -69,14 +69,14 @@ class Dredd < Sinatra::Base
 
   get '/' do
     @title = 'Messages'
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).asc).limit(100)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).limit(100)
     render_original_messages
   end
 
   get '/message/:year/:month' do
     @title = "Messages #{params[:month]} / #{params[:year]}"
     date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
     render_original_messages
   end
 
@@ -380,12 +380,6 @@ class Dredd < Sinatra::Base
 
   def render_original_messages
     @accounts = Account.order(:name.asc)
-    if @original_messages.empty?
-      @received_messages = []
-    else
-      @received_messages = ReceivedMessage.where(:original_message_id >= @original_messages.first[:original_messages].id).order(:original_message_id.asc)
-    end
-
     original_message_calendar
     erb :'index.html'
   end
