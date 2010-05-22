@@ -398,7 +398,7 @@ class Dredd < Sinatra::Base
 
         delay = (received_at.to_f - original_message.sent_at.to_f).to_i
         if delay != received_message.delay
-          modified_original_message_ids << original_message[id]
+          modified_original_message_ids << original_message.id
           updated_messages_count += 1
           received_message.delay = delay
           received_message.save
