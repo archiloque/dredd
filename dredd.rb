@@ -155,7 +155,7 @@ class Dredd < Sinatra::Base
 
     @title = @account.name
     @show_days = false
-    
+
     original_messages = OriginalMessage.limit(100)
     if original_messages.empty?
       @received_messages = []
@@ -382,6 +382,31 @@ class Dredd < Sinatra::Base
       halt 200, "#{found_messages} nouveau(x) message(s)"
     rescue RuntimeError => e
       halt 500, e.message
+    end
+  end
+
+  get '/reindex' do
+    if check_logged
+      original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:id => key).first }
+      modified_original_message_ids = []
+      updated_messages_count = 0
+      ReceivedMessage.all.each do |received_message|
+        original_message = original_messages[received_message.original_message_id]
+
+        mail = Mail.new(received_message.raw_content)
+        received_at = mail[:received].collect { |received| DateTime.parse(received.value.split(';').last) }.max
+
+        delay = (received_at.to_f - original_message.sent_at.to_f).to_i
+        if delay != received_message.delay
+          modified_original_message_ids << original_message[id]
+          updated_messages_count += 1
+          received_message.delay = delay
+          received_message.save
+        end
+      end
+      update_original_messages_infos modified_original_message_ids
+      flash[:notice] = "OK, #{updated_messages_count} message(s) réindexé(s)"
+      redirect '/'
     end
   end
 

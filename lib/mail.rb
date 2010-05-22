@@ -43,7 +43,7 @@ module Sinatra
                   received_message.original_message = original_message
                   received_message.account = account
                   received_message.raw_content = raw_content
-                  received_message.received_at = mail[:received].collect{|received| DateTime.parse(received.value.split(';').last)}.max
+                  received_message.received_at = mail[:received].collect { |received| DateTime.parse(received.value.split(';').last) }.max
                   received_message.delay = (received_message.received_at.to_f - original_message.sent_at.to_f).to_i
                   received_message.save
                   found_messages += 1
@@ -60,17 +60,7 @@ module Sinatra
           exception_message << error_2_html(e)
         end
       end
-      original_messages_to_update = original_messages.values.compact.collect { |original_message| original_message.id }.join(', ')
-      if original_messages_to_update != ''
-        database.run("update original_messages
-                    set average_time_to_receive =
-                      (select avg(received_messages.delay) from received_messages
-                        where original_messages.id = received_messages.original_message_id),
-                    slower_received_message_id =
-                      (select received_messages.id from received_messages
-                        where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)
-                    where id in (#{original_messages_to_update})")
-      end
+      update_original_messages_infos original_messages.values.compact.collect { |original_message| original_message.id }
       if exception_message != ''
         raise exception_message
       else
@@ -108,6 +98,20 @@ module Sinatra
       end
       mail.delivery_method :sendmail
       mail.deliver
+    end
+
+    def update_original_messages_infos original_messages_ids
+      unless original_messages_ids.empty?
+        original_messages_ids.uniq.join(', ')
+        database.run("update original_messages
+                    set average_time_to_receive =
+                      (select avg(received_messages.delay) from received_messages
+                        where original_messages.id = received_messages.original_message_id),
+                    slower_received_message_id =
+                      (select received_messages.id from received_messages
+                        where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)
+                    where id in (#{original_messages_to_update})")
+      end
     end
 
     private
