@@ -156,14 +156,14 @@ class Dredd < Sinatra::Base
     @title = @account.name
     @show_days = false
 
-    original_messages = OriginalMessage.limit(100)
+    original_messages = OriginalMessage.limit(100).order(:id.desc).limit(100)
+    @original_messages_hash = {}
     if original_messages.empty?
       @received_messages = []
     else
-      @received_messages = ReceivedMessage.where('original_message_id >= ?', original_messages.first.id).where(:account_id => @account.id).order(:original_message_id.asc)
+      original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
+      @received_messages = ReceivedMessage.where('original_message_id >= ?', @original_messages_hash.keys.sort.first).where(:account_id => @account.id).order(:original_message_id.asc)
     end
-    @original_messages_hash = {}
-    original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
 
     render_received_messages
   end
