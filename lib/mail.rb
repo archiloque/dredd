@@ -102,7 +102,6 @@ module Sinatra
 
     def update_original_messages_infos original_messages_ids
       unless original_messages_ids.empty?
-        original_messages_ids.uniq.join(', ')
         database.run("update original_messages
                     set average_time_to_receive =
                       (select avg(received_messages.delay) from received_messages
@@ -110,7 +109,7 @@ module Sinatra
                     slower_received_message_id =
                       (select received_messages.id from received_messages
                         where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)
-                    where id in (#{original_messages_to_update})")
+                    where id in (#{original_messages_ids.uniq.join(', ')})")
       end
     end
 
