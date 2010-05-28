@@ -103,9 +103,15 @@ module Sinatra
     def update_original_messages_infos original_messages_ids
       unless original_messages_ids.empty?
         database.run("update original_messages
-                    set average_time_to_receive =
-                      (select avg(received_messages.delay) from received_messages
-                        where original_messages.id = received_messages.original_message_id),
+                    set median_time_to_receive =
+                      (select x.delay from received_messages x, received_messages y
+                      where x.original_message_id = y.original_message_id and x.original_message_id = original_messages.id
+                      GROUP BY x.delay
+                      HAVING
+                        SUM(CASE WHEN y.delay <= x.delay
+                          THEN 1 ELSE 0 END)>=(COUNT(*)+1)/2 AND
+                        SUM(CASE WHEN y.delay >= x.delay
+                          THEN 1 ELSE 0 END)>=(COUNT(*)/2)+1),
                     slower_received_message_id =
                       (select received_messages.id from received_messages
                         where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)

@@ -6,8 +6,11 @@
     <%= value('À', @original_message.to) %>
   <% end %>
   <%= value('Envoi', "<a href=\"/message/#{Integer(@original_message.sent_at.to_f)}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
-  <% if @original_message.average_time_to_receive %>
-    <%= value('Délai d\'arrivée moyen pour ce message', "#{@original_message.average_time_to_receive}s") %>
+  <% if @original_message.median_time_to_receive %>
+    <%= value('Temps médian <a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a>', "#{@original_message.median_time_to_receive}s") %>
+  <% end %>
+  <% if @slower_received_message %>
+    <%= value('Plus lent', "#{@slower_received_message.delay}s pour <a href=\"/account/#{@slower_received_message_account.name}/message/#{Integer(@original_message.sent_at.to_f)}\">#{@slower_received_message_account.name}</a>") %>
   <% end %>
   <%= value('Délai pour ce compte', "#{@received_message.delay}s") %>
   <br/>

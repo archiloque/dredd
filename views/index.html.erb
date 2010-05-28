@@ -3,7 +3,7 @@
 <div class="graph" id="graphGeneral"></div>
 
 <%
-   avg_data = []
+   median_data = []
    max_data = []
 
    # hash original_message_id => original_message
@@ -12,8 +12,8 @@
    @original_messages.each do |original_message_hash|
      original_message = original_message_hash[:original_messages]
      date = Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000
-     if original_message.average_time_to_receive
-       avg_data << [date, original_message.average_time_to_receive]
+     if original_message.median_time_to_receive
+       median_data << [date, original_message.median_time_to_receive]
      end
      slower_received_message = original_message_hash[:slower_received_message]
      if slower_received_message
@@ -22,7 +22,7 @@
      original_messages_by_id[original_message.id] = original_message
    end
 
-   avg_data.sort! { |x, y| x[0] <=> y[0] }
+   median_data.sort! { |x, y| x[0] <=> y[0] }
    max_data.sort! { |x, y| x[0] <=> y[0] }
 
    # hash account id => account name
@@ -46,7 +46,7 @@
 
    dataset = {}
    dataset['Maximum'] = {:label => 'Maximum', :data => max_data, :color => 0}
-   dataset['Moyenne'] = {:label => 'Moyenne', :data => avg_data, :color => 1}
+   dataset['Médiane'] = {:label => 'Médiane', :data => median_data, :color => 1}
    color = 2
    messages.each_pair do |index, value|
      label = accounts_by_id[index]
@@ -68,7 +68,7 @@
   <% end %>
 
   <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label></span>
-  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Moyenne" checked="checked"> <label>Moyenne</label></span>
+  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Médiane" checked="checked"> <label>Médiane <a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a></label></span>
   <% @accounts.each do |account| %>
     <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %></span>
   <% end %>

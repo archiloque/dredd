@@ -1,19 +1,19 @@
 require 'email_veracity'
 
-migration "create table users" do
+migration 'create table users' do
   database.create_table :users do
     primary_key :openid_identifier, :type => String, :null => false, :auto_increment => false
   end
 end
 
-migration "create table meta" do
+migration 'create table meta' do
   database.create_table :metas do
     primary_key :name, :type => String, :null => false, :auto_increment => false
     Text :value, :null => true
   end
 end
 
-migration "create table accounts" do
+migration 'create table accounts' do
   database.create_table :accounts do
     primary_key :id, :type=>Integer, :null => false
     String :name, :null => false, :index => true, :unique => true
@@ -35,7 +35,7 @@ migration "create table accounts" do
   end
 end
 
-migration "create table original_messages" do
+migration 'create table original_messages' do
   database.create_table :original_messages do
     primary_key :id, :type=>Integer, :null => false
 
@@ -50,7 +50,7 @@ migration "create table original_messages" do
   end
 end
 
-migration "create table received_messages" do
+migration 'create table received_messages' do
   database.create_table :received_messages do
     primary_key :id, :type=>Integer, :null => false
 
@@ -63,15 +63,31 @@ migration "create table received_messages" do
   end
 end
 
-migration "add average_time_to_receive and slower_received_message" do
+migration 'add average_time_to_receive and slower_received_message' do
   database.alter_table :original_messages do
-
     add_column :average_time_to_receive, :float, :null => true
     add_foreign_key :slower_received_message_id, :received_messages, :key => :id, :null => true
-
   end
-
 end
+
+migration 'add median time' do
+  database.alter_table :original_messages do
+    add_column :median_time_to_receive, :float, :null => true
+  end
+  database.run('update original_messages set median_time_to_receive =
+                (select x.delay from received_messages x, received_messages y
+                  where x.original_message_id = y.original_message_id and x.original_message_id = original_messages.id
+                GROUP BY x.delay
+                HAVING
+                  SUM(CASE WHEN y.delay <= x.delay
+                    THEN 1 ELSE 0 END)>=(COUNT(*)+1)/2 AND
+                  SUM(CASE WHEN y.delay >= x.delay
+                    THEN 1 ELSE 0 END)>=(COUNT(*)/2)+1)')
+  database.alter_table :original_messages do
+    drop_column :average_time_to_receive
+  end
+end
+
 
 class Account < Sequel::Model
 
@@ -80,24 +96,24 @@ class Account < Sequel::Model
 
   def validate
     if name.blank?
-      errors.add("", "Le nom du compte est vide")
+      errors.add('', 'Le nom du compte est vide')
     end
     if address.blank?
-      errors.add("", "L'addresse mail est vide")
+      errors.add('', 'L\'addresse mail est vide')
     end
     if server_address.blank?
-      errors.add("", "L'addresse du serveur est vide")
+      errors.add('', 'L\'addresse du serveur est vide')
     end
     if password.blank?
-      errors.add("", "Le mot de passe est vide")
+      errors.add('', 'Le mot de passe est vide')
     end
     if port.blank?
-      errors.add("", "Le port est vide")
+      errors.add('', 'Le port est vide')
     else
       begin
         Integer(port)
       rescue ArgumentError
-        errors.add("", "La valeur du port est invalide")
+        errors.add('', 'La valeur du port est invalide')
       end
     end
   end
@@ -116,7 +132,7 @@ class User < Sequel::Model
     begin
       URI.parse openid_identifier
     rescue URI::InvalidURIError
-      errors.add("", "[#{openid_identifier} n'est pas une adresse valide")
+      errors.add('', '[#{openid_identifier} n\'est pas une adresse valide')
     end
   end
 end
@@ -131,7 +147,7 @@ class OriginalMessage < Sequel::Model
 
   plugin :lazy_attributes, :body, :subject, :to, :from
 
-  end
+end
 
 class ReceivedMessage < Sequel::Model
 
