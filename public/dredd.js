@@ -46,15 +46,29 @@ function plotGeneral() {
 
     var data = [];
 
+    var displayMaximum = false;
+    var displayedElements = {};
+
     $(".plotCheck:checked").each(function () {
         var key = $(this).attr("name");
         if (key) {
             if (key == "Maximum") {
-                data = data.concat(datasetMaximum);
+                displayMaximum = true;
             } else if (dataset[key]) {
-                data.push(dataset[key]);
+                displayedElements[key] = key;
             }
         }
+    });
+
+    if (displayMaximum) {
+        $.each(datasetMaximum, function(name, value) {
+            if (displayedElements[name] == null) {
+                data.push(datasetMaximum[name]);
+            }
+        });
+    }
+    $.each(displayedElements, function(key) {
+        data.push(dataset[key]);
     });
 
     if (data.length > 0)

@@ -54,9 +54,8 @@
      end
    end
 
-
-   dataset_maximum = []
-   dataset_maximum << {:label => 'Maximum', :data => max_data_full, :line => {:lineWidth => 1}, :color => "rgb(200, 200, 200)", :points => {:show => false}, :shadowSize => 0}
+   dataset_maximum = {}
+   dataset_maximum['Maximum'] ={:label => 'Maximum', :data => max_data_full, :line => {:lineWidth => 1}, :color => "rgb(200, 200, 200)", :points => {:show => false}, :shadowSize => 0}
 
    color = 2
    color_per_account_id = {}
@@ -72,7 +71,7 @@
    end
 
    max_data_per_account.each_pair do |account_id, data|
-     dataset_maximum << {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color_per_account_id[account_id], :lines => {:show => false}, :shadowSize => 0}
+     dataset_maximum[accounts_by_id[account_id]] = {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color_per_account_id[account_id], :lines => {:show => false}, :shadowSize => 0}
    end
 
 %>
@@ -98,7 +97,10 @@
 <script>
   <%= "var datasetMaximum = #{dataset_maximum.to_json};"%>
   <%= "var dataset = #{dataset.to_json};"%>
-  var current_dataset = datasetMaximum.concat(dataset[0]);
+  var current_dataset = [dataset[0]];
+  $.each(datasetMaximum, function(name, value) {
+        current_dataset.push(value);
+  });
   <% if @show_days %>
   <% if params[:day] %>
   var showPoints = true;
