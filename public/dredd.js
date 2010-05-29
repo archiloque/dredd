@@ -61,9 +61,12 @@ function plotGeneral() {
     });
 
     if (displayMaximum) {
+        data.push(datasetMaximum["Maximum"]);
         $.each(datasetMaximum, function(name, value) {
-            if (displayedElements[name] == null) {
-                data.push(datasetMaximum[name]);
+            if (name != "Maximum") {
+                if (displayedElements[name] == null) {
+                    data.push(datasetMaximum[name]);
+                }
             }
         });
     }
