@@ -59,17 +59,20 @@
    dataset_maximum << {:label => 'Maximum', :data => max_data_full, :line => {:lineWidth => 1}, :color => "rgb(200, 200, 200)", :points => {:show => false}, :shadowSize => 0}
 
    color = 2
-
-   max_data_per_account.each_pair do |account_id, data|
-     dataset_maximum << {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color += 1, :lines => {:show => false}, :shadowSize => 0}
-   end
+   color_per_account_id = {}
 
    dataset = {}
    dataset['Médiane'] = {:label => 'Médiane', :data => median_data, :line => {:lineWidth => 1}, :color => "rgb(150, 150, 150)", :points => {:show => false}, :shadowSize => 0}
+
    messages.each_pair do |index, value|
      label = accounts_by_id[index]
      dataset[label] = {:label => label, :data => value, :color => color, :shadowSize => 0}
+     color_per_account_id[index] = color
      color += 1
+   end
+
+   max_data_per_account.each_pair do |account_id, data|
+     dataset_maximum << {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color_per_account_id[account_id], :lines => {:show => false}, :shadowSize => 0}
    end
 
 %>
