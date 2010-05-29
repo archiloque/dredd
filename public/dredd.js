@@ -46,33 +46,28 @@ function plotGeneral() {
 
     var data = [];
 
-    var displayMaximum = false;
-    var displayedElements = {};
+    var displayMaximum = $("input[name=Maximum]:checked").length == 1;
 
-    $(".plotCheck:checked").each(function () {
+    $(".plotCheck").each(function () {
         var key = $(this).attr("name");
-        if (key) {
-            if (key == "Maximum") {
-                displayMaximum = true;
-            } else if (dataset[key]) {
-                displayedElements[key] = key;
+        if ((key != "Maximum") && (key != 'Médiane')) {
+            if ($("input[name=" + key + "]:checked").length == 1) {
+                data.push(dataset[key]);
+            } else {
+                var displayMaximum = $("input[name=Maximum]:checked").length == 1;
+                if (displayMaximum && (datasetMaximumPerAccount[key] != null)) {
+                    data.push(datasetMaximumPerAccount[key]);
+                }
             }
         }
     });
 
     if (displayMaximum) {
-        data.push(datasetMaximum["Maximum"]);
-        $.each(datasetMaximum, function(name, value) {
-            if (name != "Maximum") {
-                if (displayedElements[name] == null) {
-                    data.push(datasetMaximum[name]);
-                }
-            }
-        });
+        data.push(datasetMaximum);
     }
-    $.each(displayedElements, function(key) {
-        data.push(dataset[key]);
-    });
+    if ($("input[name=Médiane]:checked").length == 1) {
+        data.push(datasetMedian);
+    }
 
     if (data.length > 0)
 

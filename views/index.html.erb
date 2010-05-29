@@ -54,14 +54,11 @@
      end
    end
 
-   dataset_maximum = {}
-   dataset_maximum['Maximum'] ={:label => 'Maximum', :data => max_data_full, :line => {:lineWidth => 1}, :color => "rgb(200, 200, 200)", :points => {:show => false}, :shadowSize => 0}
-
    color = 2
    color_per_account_id = {}
 
    dataset = {}
-   dataset['Médiane'] = {:label => 'Médiane', :data => median_data, :line => {:lineWidth => 1}, :color => "rgb(150, 150, 150)", :points => {:show => false}, :shadowSize => 0}
+   dataset_median = {:label => 'Médiane', :data => median_data, :line => {:lineWidth => 1}, :color => "rgb(150, 150, 150)", :points => {:show => false}, :shadowSize => 0}
 
    messages.each_pair do |index, value|
      label = accounts_by_id[index]
@@ -70,8 +67,10 @@
      color += 1
    end
 
+   dataset_maximum = {:label => 'Maximum', :data => max_data_full, :line => {:lineWidth => 1}, :color => "rgb(200, 200, 200)", :points => {:show => false}, :shadowSize => 0}
+   dataset_maximum_per_account = {}
    max_data_per_account.each_pair do |account_id, data|
-     dataset_maximum[accounts_by_id[account_id]] = {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color_per_account_id[account_id], :lines => {:show => false}, :shadowSize => 0}
+     dataset_maximum_per_account[accounts_by_id[account_id]] = {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color_per_account_id[account_id], :lines => {:show => false}, :shadowSize => 0}
    end
 
 %>
@@ -96,11 +95,11 @@
 
 <script>
   <%= "var datasetMaximum = #{dataset_maximum.to_json};"%>
+  <%= "var datasetMedian = #{dataset_median.to_json};"%>
+  <%= "var datasetMaximumPerAccount = #{dataset_maximum_per_account.to_json};"%>
   <%= "var dataset = #{dataset.to_json};"%>
-  var current_dataset = [dataset[0]];
-  $.each(datasetMaximum, function(name, value) {
-        current_dataset.push(value);
-  });
+  var current_dataset = [datasetMaximum, datasetMedian].concat(datasetMaximumPerAccount);
+
   <% if @show_days %>
   <% if params[:day] %>
   var showPoints = true;
