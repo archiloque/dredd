@@ -48,8 +48,12 @@ function plotGeneral() {
 
     $(".plotCheck:checked").each(function () {
         var key = $(this).attr("name");
-        if (key && dataset[key]) {
-            data.push(dataset[key]);
+        if (key) {
+            if (key == "Maximum") {
+                data = data.concat(datasetMaximum);
+            } else if (dataset[key]) {
+                data.push(dataset[key]);
+            }
         }
     });
 
@@ -74,7 +78,8 @@ function plotGeneral() {
                 }
             },
             grid: { hoverable: true, clickable: true },
-            legend: { show: true, container: $("#legend") }
+            legend: { show: true, container: $("#legend")},
+            points: {radius: 2}
         });
 }
 
@@ -113,6 +118,8 @@ function plotAccount() {
                 return v * v;
             }
         },
+        shadowSize: 0,
+        points: {radius: 2},
         grid: { hoverable: true, clickable: true },
         legend: { show: true, container: $("#legend") }
     });
@@ -160,6 +167,7 @@ $(function () {
     });
 
     $(".plotCheck").click(plotGeneral);
+
 
     $("#graphAccount").bind("plothover", function (event, pos, item) {
         $("#x").text(pos.x.toFixed(2));

@@ -3,8 +3,14 @@
 <div class="graph" id="graphGeneral"></div>
 
 <%
+   # the median data
    median_data = []
-   max_data = []
+
+   # all the max data
+   max_data_full = []
+
+   # a max data per account
+   max_data_per_account = Hash.new { |hash, key| hash[key]= [] }
 
    # hash original_message_id => original_message
    original_messages_by_id = {}
@@ -17,13 +23,15 @@
      end
      slower_received_message = original_message_hash[:slower_received_message]
      if slower_received_message
-       max_data << [date, slower_received_message.delay]
+       max_data_full << [date, slower_received_message.delay]
+       max_data_per_account[slower_received_message.account_id] << [date, slower_received_message.delay]
      end
      original_messages_by_id[original_message.id] = original_message
    end
 
    median_data.sort! { |x, y| x[0] <=> y[0] }
-   max_data.sort! { |x, y| x[0] <=> y[0] }
+   max_data_full.sort! { |x, y| x[0] <=> y[0] }
+   max_data_per_account.each_value { |list| list.sort! { |x, y| x[0] <=> y[0] } }
 
    # hash account id => account name
    accounts_by_id = {}
@@ -44,13 +52,21 @@
      end
    end
 
-   dataset = {}
-   dataset['Maximum'] = {:label => 'Maximum', :data => max_data, :color => 0}
-   dataset['Médiane'] = {:label => 'Médiane', :data => median_data, :color => 1}
+
+   dataset_maximum = []
+   dataset_maximum << {:label => 'Maximum', :data => max_data_full, :line => {:lineWidth => 1}, :color => "rgb(200, 200, 200)", :points => {:show => false}, :shadowSize => 0}
+
    color = 2
+
+   max_data_per_account.each_pair do |account_id, data|
+     dataset_maximum << {:label => "Max chez #{accounts_by_id[account_id]}", :data => data, :color => color += 1, :lines => {:show => false}, :shadowSize => 0}
+   end
+
+   dataset = {}
+   dataset['Médiane'] = {:label => 'Médiane', :data => median_data, :line => {:lineWidth => 1}, :color => "rgb(150, 150, 150)", :points => {:show => false}, :shadowSize => 0}
    messages.each_pair do |index, value|
      label = accounts_by_id[index]
-     dataset[label] = {:label => label, :data => value, :color => color}
+     dataset[label] = {:label => label, :data => value, :color => color, :shadowSize => 0}
      color += 1
    end
 
@@ -68,15 +84,16 @@
   <% end %>
 
   <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label></span>
-  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Médiane" checked="checked"> <label>Médiane <a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a></label></span>
+  <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Médiane" checked="checked"> <label>Médiane<a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a></label></span>
   <% @accounts.each do |account| %>
     <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %></span>
   <% end %>
 </fieldset>
 
 <script>
+  <%= "var datasetMaximum = #{dataset_maximum.to_json};"%>
   <%= "var dataset = #{dataset.to_json};"%>
-  var current_dataset = [dataset[0], dataset[1]];
+  var current_dataset = datasetMaximum.concat(dataset[0]);
   <% if @show_days %>
   <% if params[:day] %>
   var showPoints = true;

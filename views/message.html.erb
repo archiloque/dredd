@@ -7,7 +7,7 @@
   <%= value('Envoi', "<a href=\"/message/#{@original_message.sent_at.strftime('%Y/%m/%d')}\">#{affiche_date_heure(@original_message.sent_at, '</a> à ')}") %>
 
   <% if @original_message.median_time_to_receive %>
-    <%= value('Temps médian <a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a>', "#{@original_message.median_time_to_receive}s") %>
+    <%= value('Temps médian<a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a>', "#{@original_message.median_time_to_receive}s") %>
   <% end %>
   <% if @slower_received_message %>
     <%= value('Plus lent', "#{@slower_received_message.delay}s pour <a href=\"/account/#{@slower_received_message_account.name}/message/#{Integer(@original_message.sent_at.to_f)}\">#{@slower_received_message_account.name}</a>") %>
