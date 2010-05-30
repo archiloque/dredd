@@ -48,6 +48,14 @@ function plotGeneral() {
 
     var displayMaximum = $("input[name=Maximum]:checked").length == 1;
 
+    if ($("input[name=Médiane]:checked").length == 1) {
+        data.push(datasetMedian);
+    }
+
+    if (displayMaximum) {
+        data.push(datasetMaximum);
+    }
+
     $(".plotCheck").each(function () {
         var key = $(this).attr("name");
         if ((key != "Maximum") && (key != 'Médiane')) {
@@ -61,13 +69,6 @@ function plotGeneral() {
             }
         }
     });
-
-    if (displayMaximum) {
-        data.push(datasetMaximum);
-    }
-    if ($("input[name=Médiane]:checked").length == 1) {
-        data.push(datasetMedian);
-    }
 
     if (data.length > 0)
 
