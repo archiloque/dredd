@@ -1,5 +1,17 @@
 require 'email_veracity'
 
+class Array
+  def median
+    if self.empty?
+      nil
+    elsif (self.length % 2) == 0
+      (self[(self.length() - 1) / 2] + self[self.length() / 2]) / 2
+    else
+      self[(self.length() - 1) / 2]
+    end
+  end
+end
+
 migration 'create table users' do
   database.create_table :users do
     primary_key :openid_identifier, :type => String, :null => false, :auto_increment => false
@@ -88,7 +100,6 @@ migration 'add median time' do
   end
 end
 
-
 class Account < Sequel::Model
 
   one_to_many :received_messages
@@ -155,4 +166,11 @@ class ReceivedMessage < Sequel::Model
   many_to_one :account
   plugin :lazy_attributes, :raw_content
 
+end
+
+migration 'fix median time' do
+  OriginalMessage.all.each do |message|
+    message.median_time_to_receive = ReceivedMessage.order(:delay.asc).where('original_message_id = ?', message.id).collect { |received_message| received_message.delay }.median
+    message.save
+  end
 end

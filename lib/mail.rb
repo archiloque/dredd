@@ -103,19 +103,15 @@ module Sinatra
     def update_original_messages_infos original_messages_ids
       unless original_messages_ids.empty?
         database.run("update original_messages
-                    set median_time_to_receive =
-                      (select x.delay from received_messages x, received_messages y
-                      where x.original_message_id = y.original_message_id and x.original_message_id = original_messages.id
-                      GROUP BY x.delay
-                      HAVING
-                        SUM(CASE WHEN y.delay <= x.delay
-                          THEN 1 ELSE 0 END)>=(COUNT(*)+1)/2 AND
-                        SUM(CASE WHEN y.delay >= x.delay
-                          THEN 1 ELSE 0 END)>=(COUNT(*)/2)+1),
                     slower_received_message_id =
                       (select received_messages.id from received_messages
                         where original_messages.id = received_messages.original_message_id order by received_messages.delay desc limit 1)
                     where id in (#{original_messages_ids.uniq.join(', ')})")
+        original_messages_ids.uniq.each do |original_message_id|
+          original_message = OriginalMessage.where(:id => original_message_id).first
+          original_message.median_time_to_receive = ReceivedMessage.order(:delay.asc).where('original_message_id = ?', original_message_id).collect { |received_message| received_message.delay }.median
+          original_message.save
+        end
       end
     end
 
