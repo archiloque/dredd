@@ -21,6 +21,8 @@ module Sinatra
 
     MESSAGE_ID_REGEXP = /(\d+)@dredd.listes.rezo.com/
 
+    ONE_MINUTE = 1.0 / (24 * 60)
+
     def check_accounts accounts
       found_messages = 0
       exception_message = ''
@@ -61,6 +63,21 @@ module Sinatra
         end
       end
       update_original_messages_infos original_messages.values.compact.collect { |original_message| original_message.id }
+
+      message = nil
+      now = DateTime.now
+      missing_message = OriginalMessage.where('median_time_to_receive is null and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
+      if missing_message
+        message = "[dredd] Le message de #{affiche_date_heure(missing_message.sent_at)} n'est toujours arrivé dans aucune boite mail"
+      else
+        late_message = OriginalMessage.where('median_time_to_receive > 60 and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
+        if late_message
+          message = "[dredd] Le message de #{affiche_date_heure(late_message.sent_at)} a une médiane de #{late_message.median_time_to_receive.to_i}s"
+        end
+      end
+      if message
+        exec "#{ENV['ERROR_OUTPUT_COMMAND']} \"#{message}\""
+      end
       if exception_message != ''
         raise exception_message
       else

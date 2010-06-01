@@ -10,6 +10,7 @@ require 'sinatra/base'
 require 'rack-flash'
 
 ENV['DATABASE_URL'] ||= "sqlite://#{Dir.pwd}/dredd.sqlite3"
+ENV['ERROR_OUTPUT_COMMAND'] ||= 'echo '
 
 require 'sinatra'
 require 'sinatra/sequel'
