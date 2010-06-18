@@ -23,6 +23,8 @@ module Sinatra
 
     ONE_MINUTE = 1.0 / (24 * 60)
 
+    GMT_TIMEZONE = TZInfo::Timezone.get('GMT')
+
     def check_accounts accounts
       found_messages = 0
       exception_message = ''
@@ -68,11 +70,11 @@ module Sinatra
       now = DateTime.now
       missing_message = OriginalMessage.where('median_time_to_receive is null and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
       if missing_message
-        message = "[dredd] Le message de #{affiche_date_heure(missing_message.sent_at)} n'est toujours arrivé dans aucune boite mail"
+        message = "[dredd] Le message de #{GMT_TIMEZONE.utc_to_local(affiche_date_heure(missing_message.sent_at))} GMT n'est toujours arrive dans aucune boite mail"
       else
         late_message = OriginalMessage.where('median_time_to_receive > 600 and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
         if late_message
-          message = "[dredd] Le message de #{affiche_date_heure(late_message.sent_at)} a une médiane de #{late_message.median_time_to_receive.to_i}s"
+          message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(late_message.sent_at))} GMT a une mediane de #{late_message.median_time_to_receive.to_i}s"
         end
       end
       if message
