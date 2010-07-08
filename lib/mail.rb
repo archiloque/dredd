@@ -70,7 +70,7 @@ module Sinatra
       now = DateTime.now
       missing_message = OriginalMessage.where('median_time_to_receive is null and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
       if missing_message
-        message = "[dredd] Le message de #{GMT_TIMEZONE.utc_to_local(affiche_date_heure(missing_message.sent_at))} GMT n'est toujours arrive dans aucune boite mail"
+        message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(missing_message.sent_at))} GMT n'est toujours arrive dans aucune boite mail"
       else
         late_message = OriginalMessage.where('median_time_to_receive > 600 and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
         if late_message
