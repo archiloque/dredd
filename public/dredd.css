@@ -127,4 +127,5 @@ p {
 }
 #calendar li {
   list-style: none;
+  padding-bottom: 2px;
 }
