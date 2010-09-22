@@ -3,6 +3,7 @@ require 'bundler'
 require 'logger'
 require 'andand'
 require 'tzinfo'
+require 'json'
 
 Bundler.setup
 
