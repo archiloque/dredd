@@ -10,7 +10,7 @@ Bundler.setup
 require 'sinatra/base'
 require 'rack-flash'
 
-ENV['DATABASE_URL'] ||= "sqlite://#{Dir.pwd}/dredd.sqlite3"
+ENV['DATABASE_URL']         ||= "sqlite://#{Dir.pwd}/dredd.sqlite3"
 ENV['ERROR_OUTPUT_COMMAND'] ||= 'echo '
 
 require 'sinatra'
@@ -70,34 +70,37 @@ class Dredd < Sinatra::Base
   end
 
   get '/' do
-    @title = 'Messages'
-    @show_days = false
-
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).limit(100)
+    @title          = 'Messages'
+    @show_days      = false
+    last_message_id = nil
+    database.fetch("SELECT max(id) as m FROM original_messages") do |row|
+      last_message_id = row[:m]
+    end
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('original_messages.id > ?', (last_message_id - 100))
     render_original_messages
   end
 
   ['/message/:year/:month/?', '/message/:year/:month/:day'].each do |path|
     get path do
-      @title = "Messages #{params[:month]} / #{params[:year]}"
-      @show_days = true
+      @title             = "Messages #{params[:month]} / #{params[:year]}"
+      @show_days         = true
 
-      date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
+      date               = Date.civil(params[:year].to_i, params[:month].to_i, 1)
       @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
       render_original_messages
     end
   end
 
   get '/message/:timestamp' do
-    message_datetime = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
+    message_datetime      = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
     original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where('original_messages.sent_at = ?', message_datetime).first
     unless original_message_hash
       halt 404, 'Ce message n\'existe pas !'
     end
-    @original_message = original_message_hash[:original_messages]
-    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")}"
-    @received_messages = ReceivedMessage.eager_graph(:account).where(:original_message_id => @original_message.id).order(:delay.qualify(:received_messages).asc)
-    @slower_received_message = original_message_hash[:slower_received_message]
+    @original_message                = original_message_hash[:original_messages]
+    @title                           = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")}"
+    @received_messages               = ReceivedMessage.eager_graph(:account).where(:original_message_id => @original_message.id).order(:delay.qualify(:received_messages).asc)
+    @slower_received_message         = original_message_hash[:slower_received_message]
     @slower_received_message_account = original_message_hash[:account]
 
     original_message_calendar
@@ -110,20 +113,20 @@ class Dredd < Sinatra::Base
       unless @account
         halt 404, 'Ce compte n\'existe pas'
       end
-      date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
+      date                    = Date.civil(params[:year].to_i, params[:month].to_i, 1)
 
       @original_messages_hash = {}
-      original_messages = OriginalMessage.order(:id.asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+      original_messages       = OriginalMessage.order(:id.asc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
       if original_messages.empty?
         @received_messages = []
       else
         original_messages.each { |original_message| @original_messages_hash[original_message.id] = original_message }
-        min_message_id = @original_messages_hash[@original_messages_hash.keys.min].id
-        max_message_id = @original_messages_hash[@original_messages_hash.keys.max].id
+        min_message_id     = @original_messages_hash[@original_messages_hash.keys.min].id
+        max_message_id     = @original_messages_hash[@original_messages_hash.keys.max].id
         @received_messages = ReceivedMessage.where('original_message_id >= ? and original_message_id <= ? and account_id = ?', min_message_id, max_message_id, @account.id).order(:original_message_id.asc)
       end
 
-      @title = "#{@account.name} #{params[:month]} / #{params[:year]}"
+      @title     = "#{@account.name} #{params[:month]} / #{params[:year]}"
       @show_days = true
 
       render_received_messages
@@ -136,14 +139,14 @@ class Dredd < Sinatra::Base
       halt 404, 'Ce compte n\'existe pas'
     end
 
-    message_datetime = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
+    message_datetime      = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
     received_message_hash = ReceivedMessage.eager_graph(:original_message).where('original_message.sent_at = ? and account_id = ?', message_datetime, @account.id).first
     unless received_message_hash
       halt 404, 'Ce message n\'existe pas !'
     end
     @received_message = received_message_hash[:received_messages]
     @original_message = received_message_hash[:original_message]
-    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")} pour #{@account.name}"
+    @title            = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")} pour #{@account.name}"
     render_message_calendar
     erb :'account/message.html'
   end
@@ -155,10 +158,10 @@ class Dredd < Sinatra::Base
       halt 404, 'Ce compte n\'existe pas'
     end
 
-    @title = @account.name
-    @show_days = false
+    @title                  = @account.name
+    @show_days              = false
 
-    original_messages = OriginalMessage.limit(100).order(:id.desc).limit(100)
+    original_messages       = OriginalMessage.limit(100).order(:id.desc).limit(100)
     @original_messages_hash = {}
     if original_messages.empty?
       @received_messages = []
@@ -187,13 +190,13 @@ class Dredd < Sinatra::Base
       unless @account
         halt 404, 'Ce compte n\'existe pas'
       end
-      @account.name = params[:account][:name].downcase
-      @account.address = params[:account][:address]
+      @account.name           = params[:account][:name].downcase
+      @account.address        = params[:account][:address]
       @account.server_address = params[:account][:server_address]
-      @account.password = params[:account][:password]
-      @account.ssl = params[:account][:ssl] || false
-      @account.port = params[:account][:port]
-      @account.enabled = params[:account][:enabled]
+      @account.password       = params[:account][:password]
+      @account.ssl            = params[:account][:ssl] || false
+      @account.port           = params[:account][:port]
+      @account.enabled        = params[:account][:enabled]
       begin
         @account.save
         flash[:notice] = 'Compte modifié'
@@ -207,8 +210,8 @@ class Dredd < Sinatra::Base
 
   get '/new_account' do
     if check_logged
-      @title = 'Nouveau Compte'
-      @account = Account.new
+      @title           = 'Nouveau Compte'
+      @account         = Account.new
       @account.enabled = true
       erb :'account/edit.html'
     end
@@ -221,13 +224,13 @@ class Dredd < Sinatra::Base
         flash[:error] = "Il y a déjà un compte avec ce nom"
         erb :'account/edit.html'
       else
-        @account = Account.new(:name => name,
-                               :address => params[:account][:address],
+        @account = Account.new(:name           => name,
+                               :address        => params[:account][:address],
                                :server_address => params[:account][:server_address],
-                               :password => params[:account][:password],
-                               :ssl => params[:account][:ssl] || false,
-                               :port => params[:account][:port],
-                               :enabled => params[:account][:enabled])
+                               :password       => params[:account][:password],
+                               :ssl            => params[:account][:ssl] || false,
+                               :port           => params[:account][:port],
+                               :enabled        => params[:account][:enabled])
         begin
           @account.save
           flash[:notice] = 'Compte créé'
@@ -299,11 +302,11 @@ class Dredd < Sinatra::Base
 
   get '/config' do
     if check_logged
-      @title = 'Configuration'
-      @email_from = Meta.where(:name => 'email_from').first.andand.value
-      @email_to = Meta.where(:name => 'email_to').first.andand.value
-      @email_subject = Meta.where(:name => 'email_subject').first.andand.value
-      @email_body = Meta.where(:name => 'email_body').first.andand.value
+      @title            = 'Configuration'
+      @email_from       = Meta.where(:name => 'email_from').first.andand.value
+      @email_to         = Meta.where(:name => 'email_to').first.andand.value
+      @email_subject    = Meta.where(:name => 'email_subject').first.andand.value
+      @email_body       = Meta.where(:name => 'email_body').first.andand.value
       @backend_password = Meta.where(:name => 'backend_password').first.andand.value
       erb :'admin/config.html'
     end
@@ -313,13 +316,13 @@ class Dredd < Sinatra::Base
     if check_logged
       ['email_from', 'email_to', 'email_subject', 'email_body', 'backend_password'].each do |key|
         if Meta.filter(:name => key).count == 0
-          meta = Meta.new
-          meta.name = key
+          meta       = Meta.new
+          meta.name  = key
           meta.value = params[key]
           meta.save
         else
-          meta = Meta.where(:name => key).first
-          meta.value =  params[key]
+          meta       = Meta.where(:name => key).first
+          meta.value = params[key]
           meta.save
         end
       end
@@ -389,16 +392,16 @@ class Dredd < Sinatra::Base
 
   get '/reindex' do
     if check_logged
-      original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:id => key).first }
+      original_messages             = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:id => key).first }
       modified_original_message_ids = []
-      updated_messages_count = 0
+      updated_messages_count        = 0
       ReceivedMessage.all.each do |received_message|
         original_message = original_messages[received_message.original_message_id]
 
-        mail = Mail.new(received_message.raw_content)
-        received_at = mail[:received].collect { |received| DateTime.parse(received.value.split(';').last) }.max
+        mail             = Mail.new(received_message.raw_content)
+        received_at      = mail[:received].collect { |received| DateTime.parse(received.value.split(';').last) }.max
 
-        delay = (received_at.to_f - original_message.sent_at.to_f).to_i
+        delay            = (received_at.to_f - original_message.sent_at.to_f).to_i
         if delay != received_message.delay
           modified_original_message_ids << original_message.id
           updated_messages_count += 1
