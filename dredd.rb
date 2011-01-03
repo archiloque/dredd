@@ -73,7 +73,7 @@ class Dredd < Sinatra::Base
     @title = 'Messages'
     @show_days = false
 
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).limit(100)
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).limit(100)
     render_original_messages
   end
 
@@ -83,7 +83,7 @@ class Dredd < Sinatra::Base
       @show_days = true
 
       date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
-      @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+      @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
       render_original_messages
     end
   end
