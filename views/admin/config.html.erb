@@ -7,6 +7,7 @@
     <%= input_text('email_subject', 'Titre', @email_subject, 50) %>
     <%= input_text_area('email_body', 'Contenu', @email_body, 120, 5) %>
     <%= input_text('backend_password', 'Mot de passe pour le backend', @backend_password) %>
+    <%= input_text('notification_mail', 'Email pour notification des erreurs', @notification_mail) %>
 
     <input name="commit" type="submit" value="Mettre à jour"/>
   </fieldset>

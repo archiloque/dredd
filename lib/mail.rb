@@ -78,7 +78,14 @@ module Sinatra
         end
       end
       if message
-        exec "#{ENV['ERROR_OUTPUT_COMMAND']} \"#{message}\""
+        mail = Mail.new do
+          from Meta.where(:name => 'email_from').first.andand.value
+          to Meta.where(:name => 'notification_mail').first.andand.value
+          subject message
+          body message
+        end
+        mail.delivery_method :sendmail
+        mail.deliver
       end
       if exception_message != ''
         raise exception_message
