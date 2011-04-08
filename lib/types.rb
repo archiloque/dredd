@@ -100,6 +100,10 @@ migration 'add median time' do
   end
 end
 
+migration 'add last late message' do
+	database.run("insert into metas(name, value) values('last_late_message', '0')")
+end
+
 class Account < Sequel::Model
 
   one_to_many :received_messages
