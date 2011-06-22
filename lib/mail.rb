@@ -70,15 +70,27 @@ module Sinatra
       now = DateTime.now
       missing_message = OriginalMessage.where('median_time_to_receive is null and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
       if missing_message
-        message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(missing_message.sent_at))} GMT n'est toujours arrive dans aucune boite mail"
+        message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(missing_message.sent_at))} GMT n'est toujours arrivé dans aucune boite mail"
       else
         late_message = OriginalMessage.where('median_time_to_receive > 600 and sent_at < ? and sent_at > ?', (now - (10 * ONE_MINUTE)), (now - (120 * ONE_MINUTE))).order(:sent_at.asc).first
         if late_message
-          message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(late_message.sent_at))} GMT a une mediane de #{late_message.median_time_to_receive.to_i}s"
+          last_late_message = Meta.where(:name => 'last_late_message').first
+          if late_message.id.to_s != last_late_message.value
+	        message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(late_message.sent_at))} GMT a une médiane de #{late_message.median_time_to_receive.to_i}s"
+		    last_late_message.value = late_message.id.to_s
+		    last_late_message.save
+		  end
         end
       end
       if message
-        exec "#{ENV['ERROR_OUTPUT_COMMAND']} \"#{message}\""
+        mail = Mail.new do
+          from Meta.where(:name => 'email_from').first.andand.value
+          to Meta.where(:name => 'notification_mail').first.andand.value
+          subject message
+          body message
+        end
+        mail.delivery_method :sendmail
+        mail.deliver
       end
       if exception_message != ''
         raise exception_message

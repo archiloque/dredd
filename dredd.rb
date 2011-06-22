@@ -3,6 +3,7 @@ require 'bundler'
 require 'logger'
 require 'andand'
 require 'tzinfo'
+require 'json'
 
 Bundler.setup
 
@@ -71,8 +72,11 @@ class Dredd < Sinatra::Base
   get '/' do
     @title = 'Messages'
     @show_days = false
-
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).limit(100)
+    last_message_id = nil
+    database.fetch("SELECT max(id) as m FROM original_messages") do |row|
+      last_message_id = row[:m]
+    end
+    @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('original_messages.id > ?', (last_message_id - 100))
     render_original_messages
   end
 
@@ -82,7 +86,7 @@ class Dredd < Sinatra::Base
       @show_days = true
 
       date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
-      @original_messages = OriginalMessage.eager_graph(:slower_received_message => :account).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+      @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
       render_original_messages
     end
   end
@@ -304,13 +308,14 @@ class Dredd < Sinatra::Base
       @email_subject = Meta.where(:name => 'email_subject').first.andand.value
       @email_body = Meta.where(:name => 'email_body').first.andand.value
       @backend_password = Meta.where(:name => 'backend_password').first.andand.value
+      @notification_mail = Meta.where(:name => 'notification_mail').first.andand.value
       erb :'admin/config.html'
     end
   end
 
   post '/config' do
     if check_logged
-      ['email_from', 'email_to', 'email_subject', 'email_body', 'backend_password'].each do |key|
+      ['email_from', 'email_to', 'email_subject', 'email_body', 'backend_password', 'notification_mail'].each do |key|
         if Meta.filter(:name => key).count == 0
           meta = Meta.new
           meta.name = key
@@ -318,7 +323,7 @@ class Dredd < Sinatra::Base
           meta.save
         else
           meta = Meta.where(:name => key).first
-          meta.value =  params[key]
+          meta.value = params[key]
           meta.save
         end
       end
