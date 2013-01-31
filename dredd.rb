@@ -76,7 +76,7 @@ class Dredd < Sinatra::Base
     database.fetch("SELECT max(id) as m FROM original_messages") do |row|
       last_message_id = row[:m]
     end
-    @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('original_messages.id > ?', (last_message_id - 100))
+    @original_messages = OriginalMessage.order(:id.desc).where('original_messages.id > ?', (last_message_id - 100))
     render_original_messages
   end
 
@@ -86,7 +86,7 @@ class Dredd < Sinatra::Base
       @show_days = true
 
       date = Date.civil(params[:year].to_i, params[:month].to_i, 1)
-      @original_messages = OriginalMessage.eager_graph(:slower_received_message).order(:id.qualify(:original_messages).desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
+      @original_messages = OriginalMessage.order(:id.desc).where('sent_at >= ? and sent_at < ?', date, date >> 1)
       render_original_messages
     end
   end
@@ -424,15 +424,19 @@ class Dredd < Sinatra::Base
   end
 
   def render_original_messages
+    @received_messages_per_id = {}
+    ReceivedMessage.where(:id => @original_messages.collect{|om| om.slower_received_message_id}.compact).each do |received_message|
+      @received_messages_per_id[received_message.id] = received_message
+    end
     @accounts = Account.order(:name.asc)
     original_message_calendar
     erb :'index.html'
   end
 
   def render_message_calendar
-    first_message = ReceivedMessage.eager_graph(:account, :original_message).order(:original_message_id.asc).where('account_id = ?', @account.id).first
-    if first_message
-      @calendar_min_date = first_message[:original_message].sent_at
+    first_original_message = OriginalMessage.where('id = (select original_message_id from received_messages where account_id = ? ORDER BY original_message_id ASC LIMIT 1)', @account.id).first
+    if first_original_message
+      @calendar_min_date = first_original_message.sent_at
       @calendar_base_url = "/account/#{params[:name]}/"
     end
   end

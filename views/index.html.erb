@@ -15,13 +15,12 @@
    # hash original_message_id => original_message
    original_messages_by_id = {}
 
-   @original_messages.each do |original_message_hash|
-     original_message = original_message_hash[:original_messages]
+   @original_messages.each do |original_message|
      date = Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000
      if original_message.median_time_to_receive
        median_data << [date, original_message.median_time_to_receive]
      end
-     slower_received_message = original_message_hash[:slower_received_message]
+     slower_received_message = @received_messages_per_id[original_message.slower_received_message_id]
      if slower_received_message
        max_data_full << [date, slower_received_message.delay]
        if slower_received_message.delay > 60
