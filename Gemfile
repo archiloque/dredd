@@ -11,6 +11,6 @@ gem 'rack-flash3', '1.0.3'
 gem 'mail', '2.5.3'
 gem 'tzinfo', '0.3.35'
 gem 'i18n', '0.5.0'
-gem 'json', '1.7.6'
+gem 'json_pure', '1.7.6'
 gem 'mysql'
 
