@@ -24,6 +24,6 @@
 <fieldset>
   <legend>Comptes et délai d'arrivée</legend>
   <% @received_messages.each do |received_message_hash| %>
-    <%= value("<a href=\"/account/#{received_message_hash[:account].name}/message/#{Integer(@original_message.sent_at.to_f)}\">#{received_message_hash[:account].name}</a>", "#{received_message_hash[:received_messages].delay}s") %>
+    <%= value("<a href=\"/account/#{received_message_hash[:name]}/message/#{@original_message.id}\">#{received_message_hash[:name]}</a>", "#{received_message_hash[:delay]}s") %>
   <% end %>
 </fieldset>

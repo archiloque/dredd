@@ -1,17 +1,16 @@
 source :gemcutter
 
-gem 'sinatra', '1.2.1'
-gem 'sequel', '3.21.0'
+gem 'rack', '1.5.1'
+gem 'sinatra', '1.3.4'
+gem 'sequel', '3.43.0'
 gem 'sinatra-sequel', '0.9.0'
 gem 'rack-openid', '1.2.0'
 gem 'andand', '1.3.1'
 gem 'email_veracity', '0.6.0'
-gem 'rack-flash', '0.1.1'
-gem 'mail', '2.2.15'
-gem 'tzinfo', '0.3.25'
+gem 'rack-flash3', '1.0.3'
+gem 'mail', '2.5.3'
+gem 'tzinfo', '0.3.35'
 gem 'i18n', '0.5.0'
-gem 'json', '1.5.1'
-group :development do
-  gem 'pg'
-end
+gem 'json', '1.7.6'
+gem 'mysql'
 

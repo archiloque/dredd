@@ -12,15 +12,21 @@
    end
 
    plot_data = []
+   plot_ids = {}
    @received_messages.each do |received_message|
      original_message = @original_messages_hash.delete(received_message.original_message_id)
      if original_message
-       plot_data << [(Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000), received_message.delay]
+       message_timestamp = (Sequel.database_timezone.utc_to_local(original_message.sent_at).to_epoch * 1000)
+       plot_data << [message_timestamp, received_message.delay]
+       plot_ids[message_timestamp] = original_message.id
      end
    end
    miss_data = []
+   miss_ids = {}
    @original_messages_hash.each_value do |original_message|
-     miss_data << [Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000, 0]
+     message_timestamp = Sequel.database_timezone.utc_to_local(original_message.sent_at).to_epoch * 1000
+     miss_data << [message_timestamp, 0]
+     miss_ids[message_timestamp] = original_message.id
    end
 
 %>
@@ -29,6 +35,8 @@
   var accountName = "<%= @account.name %>";
   <%= "var plotData = #{plot_data.to_json};" %>
   <%= "var missData = #{miss_data.to_json};" %>
+  <%= "var plotsIds = #{plot_ids.to_json};" %>
+  <%= "var missIds = #{miss_ids.to_json};" %>
 
   <% if @show_days %>
     <% if params[:day] %>

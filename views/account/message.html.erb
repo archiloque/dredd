@@ -5,7 +5,7 @@
     <%= value('De', @original_message.from) %>
     <%= value('À', @original_message.to) %>
   <% end %>
-  <%= value('Envoi', "<a href=\"/message/#{Integer(@original_message.sent_at.to_f)}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
+  <%= value('Envoi', "<a href=\"/message/#{@original_message.id}\">#{affiche_date_heure(@original_message.sent_at)}</a>") %>
   <% if @original_message.median_time_to_receive %>
     <%= value('Temps médian <a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a>', "#{@original_message.median_time_to_receive}s") %>
   <% end %>

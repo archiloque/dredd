@@ -19,7 +19,7 @@ module Sinatra
 
   module DreddMailHelper
 
-    MESSAGE_ID_REGEXP = /(\d+)@dredd.listes.rezo.com/
+    MESSAGE_ID_REGEXP = /dredd_(\d+)@dredd.listes.rezo.com/
 
     ONE_MINUTE = 1.0 / (24 * 60)
 
@@ -28,7 +28,7 @@ module Sinatra
     def check_accounts accounts
       found_messages = 0
       exception_message = ''
-      original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:sent_at => key).first }
+      original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:id => key).first }
       accounts.each do |account|
         begin
           pop3(account) do |pop|
@@ -38,17 +38,17 @@ module Sinatra
               # does the message id match our regexp ?
               match = MESSAGE_ID_REGEXP.match(mail.message_id)
               if match
-                timestamp_value = timestamp_2_datetime(match[1])
+                id_value = match[1].to_i
 
                 # look for the original message
-                original_message = original_messages[timestamp_value]
+                original_message = original_messages[id_value]
                 if original_message && (ReceivedMessage.where(:account_id => account.id).where(:original_message_id => original_message.id).count == 0)
                   received_message = ReceivedMessage.new
                   received_message.original_message = original_message
                   received_message.account = account
                   received_message.raw_content = raw_content
                   received_message.received_at = mail[:received].collect { |received| DateTime.parse(received.value.split(';').last) }.max
-                  received_message.delay = (received_message.received_at.to_f - original_message.sent_at.to_f).to_i
+                  received_message.delay = (received_message.received_at.to_epoch - original_message.sent_at.to_epoch)
                   received_message.save
                   found_messages += 1
                 end
@@ -125,7 +125,7 @@ module Sinatra
         to original_message.to
         subject original_message.subject
         body original_message.body
-        message_id "<#{Integer(original_message.sent_at.to_f)}@dredd.listes.rezo.com>"
+        message_id "<dredd_#{original_message.id}@dredd.listes.rezo.com>"
       end
       mail.delivery_method :sendmail
       mail.deliver

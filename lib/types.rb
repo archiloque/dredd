@@ -1,5 +1,27 @@
 require 'email_veracity'
 
+class DateTime
+  def to_epoch
+    strftime('%s').to_i
+  end
+end
+
+module Sinatra
+
+  module SequelExtension
+
+    def create_migrations_table
+      database.create_table? :migrations do
+        primary_key :id
+        Text :name, :null => false
+        timestamp :ran_at
+      end
+    end
+
+  end
+
+end
+
 class Array
   def median
     if self.empty?

@@ -8,6 +8,7 @@
 
    # all the max data
    max_data_full = []
+   max_data_ids = {}
 
    # a max data per account
    max_data_per_account = Hash.new { |hash, key| hash[key]= [] }
@@ -16,13 +17,14 @@
    original_messages_by_id = {}
 
    @original_messages.each do |original_message|
-     date = Integer(Sequel.database_timezone.utc_to_local(original_message.sent_at).to_f) * 1000
+     date = Sequel.database_timezone.utc_to_local(original_message.sent_at).to_epoch * 1000
      if original_message.median_time_to_receive
        median_data << [date, original_message.median_time_to_receive]
      end
      slower_received_message = @received_messages_per_id[original_message.slower_received_message_id]
      if slower_received_message
        max_data_full << [date, slower_received_message.delay]
+       max_data_ids[date] = slower_received_message.original_message_id
        if slower_received_message.delay > 60
          max_data_per_account[slower_received_message.account_id] << [date, slower_received_message.delay]
        end
@@ -47,9 +49,12 @@
 
    # hash account name => array of [message sent time, message delay]
    messages = Hash.new { |hash, key| hash[key] = [] }
+   messages_id_by_timestamp = Hash.new { |hash, key| hash[key] = {} }
    unless original_messages_by_id.empty?
      ReceivedMessage.where(:original_message_id => message_min..message_max).order(:original_message_id.asc).each do |received_message|
-       messages[received_message.account_id] << [(Integer(Sequel.database_timezone.utc_to_local(original_messages_by_id[received_message.original_message_id].sent_at).to_f) * 1000), received_message.delay]
+       timestamp = (Sequel.database_timezone.utc_to_local(original_messages_by_id[received_message.original_message_id].sent_at).to_epoch * 1000)
+       messages[received_message.account_id] << [timestamp, received_message.delay]
+       messages_id_by_timestamp[accounts_by_id[received_message.account_id]][timestamp] = received_message.original_message_id
      end
    end
 
@@ -96,7 +101,9 @@
   <%= "var datasetMaximum = #{dataset_maximum.to_json};"%>
   <%= "var datasetMedian = #{dataset_median.to_json};"%>
   <%= "var datasetMaximumPerAccount = #{dataset_maximum_per_account.to_json};"%>
-  <%= "var dataset = #{dataset.to_json};"%>
+  <%= "var maxDataIds = #{max_data_ids.to_json};" %>
+  <%= "var messagesIdByTimestamp = #{messages_id_by_timestamp.to_json};" %>
+  <%= "var dataset = #{dataset.to_json};" %>
   var current_dataset = [datasetMaximum, datasetMedian].concat(datasetMaximumPerAccount);
 
   <% if @show_days %>

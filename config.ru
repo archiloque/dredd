@@ -1,3 +1,3 @@
-ENV['DATABASE_URL'] = "sqlite://dredd.sqlite3"
-require 'dredd'
+ENV['DATABASE_URL'] = 'mysql://dredd:judge@localhost/dredd'
+require './dredd'
 run Dredd

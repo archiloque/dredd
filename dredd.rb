@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'rubygems'
 require 'bundler'
 require 'logger'
@@ -80,7 +82,7 @@ class Dredd < Sinatra::Base
     render_original_messages
   end
 
-  ['/message/:year/:month/?', '/message/:year/:month/:day'].each do |path|
+  ['/message/:year/:month', '/message/:year/:month/:day'].each do |path|
     get path do
       @title = "Messages #{params[:month]} / #{params[:year]}"
       @show_days = true
@@ -91,23 +93,42 @@ class Dredd < Sinatra::Base
     end
   end
 
-  get '/message/:timestamp' do
-    message_datetime = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
-    original_message_hash = OriginalMessage.eager_graph(:slower_received_message => :account).where('original_messages.sent_at = ?', message_datetime).first
-    unless original_message_hash
+  get '/message/:message_id' do
+    @original_message = OriginalMessage.where('original_messages.id = ?', params[:message_id]).first
+    unless @original_message
       halt 404, 'Ce message n\'existe pas !'
     end
-    @original_message = original_message_hash[:original_messages]
     @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")}"
     @received_messages = ReceivedMessage.eager_graph(:account).where(:original_message_id => @original_message.id).order(:delay.qualify(:received_messages).asc)
-    @slower_received_message = original_message_hash[:slower_received_message]
-    @slower_received_message_account = original_message_hash[:account]
-
+    if @original_message.slower_received_message_id
+      slower_message_hash = ReceivedMessage.eager_graph(:account).where('received_messages.id = ?', @original_message.slower_received_message_id).first
+      @slower_received_message = slower_message_hash[:received_messages]
+      @slower_received_message_account = slower_message_hash[:account]
+    else
+      @slower_received_message = nil
+      @slower_received_message_account = nil
+    end
     original_message_calendar
     erb :'message.html'
   end
 
-  ['/account/:name/:year/:month/?', '/account/:name/:year/:month/:day'].each do |path|
+  get '/account/:name/message/:message_id' do
+    @account = Account.where(:name => params[:name]).first
+    unless @account
+      halt 404, 'Ce compte n\'existe pas'
+    end
+
+    @original_message = OriginalMessage.where('id = ?', params[:message_id]).first
+    unless @original_message
+      halt 404, 'Ce message n\'existe pas !'
+    end
+    @received_message = ReceivedMessage.where('original_message_id = ? and account_id = ?', params[:message_id], @account.id).first
+    @title = "Message du #{affiche_date_heure(@original_message[:sent_at], "à ")} pour #{@account.name}"
+    render_message_calendar
+    erb :'account/message.html'
+  end
+
+  ['/account/:name/:year/:month', '/account/:name/:year/:month/:day'].each do |path|
     get path do
       @account = Account.where(:name => params[:name]).first
       unless @account
@@ -131,24 +152,6 @@ class Dredd < Sinatra::Base
 
       render_received_messages
     end
-  end
-
-  get '/account/:name/:timestamp' do
-    @account = Account.where(:name => params[:name]).first
-    unless @account
-      halt 404, 'Ce compte n\'existe pas'
-    end
-
-    message_datetime = Sequel.database_timezone.local_to_utc(timestamp_2_datetime(params[:timestamp]))
-    received_message_hash = ReceivedMessage.eager_graph(:original_message).where('original_message.sent_at = ? and account_id = ?', message_datetime, @account.id).first
-    unless received_message_hash
-      halt 404, 'Ce message n\'existe pas !'
-    end
-    @received_message = received_message_hash[:received_messages]
-    @original_message = received_message_hash[:original_message]
-    @title = "Message du #{affiche_date_heure(@original_message.sent_at, "à ")} pour #{@account.name}"
-    render_message_calendar
-    erb :'account/message.html'
   end
 
   get '/account/:name' do
@@ -425,7 +428,7 @@ class Dredd < Sinatra::Base
 
   def render_original_messages
     @received_messages_per_id = {}
-    ReceivedMessage.where(:id => @original_messages.collect{|om| om.slower_received_message_id}.compact).each do |received_message|
+    ReceivedMessage.where(:id => @original_messages.collect { |om| om.slower_received_message_id }.compact).each do |received_message|
       @received_messages_per_id[received_message.id] = received_message
     end
     @accounts = Account.order(:name.asc)
