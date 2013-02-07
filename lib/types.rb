@@ -126,6 +126,12 @@ migration 'add last late message' do
 	database.run("insert into metas(name, value) values('last_late_message', '0')")
 end
 
+migration 'drop raw_content' do
+  database.alter_table :received_messages do
+    drop_column :raw_content
+  end
+end
+
 class Account < Sequel::Model
 
   one_to_many :received_messages
@@ -190,7 +196,6 @@ class ReceivedMessage < Sequel::Model
 
   many_to_one :original_message
   many_to_one :account
-  plugin :lazy_attributes, :raw_content
 
 end
 

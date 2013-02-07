@@ -18,7 +18,5 @@
   <%= value('Sujet', @original_message.subject) %>
   <% if @user_logged %>
     <%= value_under('Contenu original', @original_message.body) %>
-    <br/>
-    <%= value_under('Contenu reçu', @received_message.raw_content) %>
   <% end %>
 </fieldset>

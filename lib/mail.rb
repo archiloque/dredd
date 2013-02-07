@@ -25,7 +25,7 @@ module Sinatra
 
     GMT_TIMEZONE = TZInfo::Timezone.get('GMT')
 
-    def check_accounts accounts
+    def check_accounts(accounts)
       found_messages = 0
       exception_message = ''
       original_messages = Hash.new { |hash, key| hash[key] = OriginalMessage.where(:id => key).first }
@@ -46,12 +46,13 @@ module Sinatra
                   received_message = ReceivedMessage.new
                   received_message.original_message = original_message
                   received_message.account = account
-                  received_message.raw_content = raw_content
                   received_message.received_at = mail[:received].collect { |received| DateTime.parse(received.value.split(';').last) }.max
                   received_message.delay = (received_message.received_at.to_epoch - original_message.sent_at.to_epoch)
                   received_message.save
                   found_messages += 1
                 end
+              else
+                p "Unknown message #{raw_content} from #{account.name}"
               end
               if ENV['delete_mails']
                 m.delete
@@ -76,10 +77,10 @@ module Sinatra
         if late_message
           last_late_message = Meta.where(:name => 'last_late_message').first
           if late_message.id.to_s != last_late_message.value
-	        message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(late_message.sent_at))} GMT a une médiane de #{late_message.median_time_to_receive.to_i}s"
-		    last_late_message.value = late_message.id.to_s
-		    last_late_message.save
-		  end
+            message = "[dredd] Le message de #{affiche_date_heure(GMT_TIMEZONE.utc_to_local(late_message.sent_at))} GMT a une médiane de #{late_message.median_time_to_receive.to_i}s"
+            last_late_message.value = late_message.id.to_s
+            last_late_message.save
+          end
         end
       end
       if message
@@ -119,7 +120,7 @@ module Sinatra
       end
     end
 
-    def send_message original_message
+    def send_message(original_message)
       mail = Mail.new do
         from original_message.from
         to original_message.to
@@ -131,7 +132,7 @@ module Sinatra
       mail.deliver
     end
 
-    def update_original_messages_infos original_messages_ids
+    def update_original_messages_infos(original_messages_ids)
       unless original_messages_ids.empty?
         database.run("update original_messages
                     set slower_received_message_id =
@@ -148,7 +149,7 @@ module Sinatra
 
     private
 
-    def pop3 account, & b
+    def pop3(account, & b)
       pop = Net::POP3.new(account.server_address, account.port)
       if account.ssl
         pop.enable_ssl(OpenSSL::SSL::VERIFY_NONE)
