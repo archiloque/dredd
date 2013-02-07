@@ -39,7 +39,7 @@ end
 class Dredd < Sinatra::Base
 
   set :views, File.dirname(__FILE__) + '/views'
-  set :public, File.dirname(__FILE__) + '/public'
+  set :public_folder, File.dirname(__FILE__) + '/public'
   set :raise_errors, true
   set :show_exceptions, :true
 
