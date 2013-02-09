@@ -38,7 +38,7 @@ module Sinatra
               # does the message id match our regexp ?
               match = MESSAGE_ID_REGEXP.match(mail.message_id)
               if match
-                p "Found matching message from #{account.name}"
+                p "Found matching message from #{account.name} #{mail.message_id}"
                 id_value = match[1].to_i
 
                 # look for the original message
@@ -53,7 +53,8 @@ module Sinatra
                   found_messages += 1
                 end
               else
-                p "Unknown message #{raw_content} from #{account.name}"
+                p "Unknown message from #{account.name} #{mail.message_id}"
+                STDOUT << "#{raw_content}\n"
               end
               if ENV['delete_mails']
                 m.delete
