@@ -38,6 +38,7 @@ module Sinatra
               # does the message id match our regexp ?
               match = MESSAGE_ID_REGEXP.match(mail.message_id)
               if match
+                p "Found matching message from #{account.name}"
                 id_value = match[1].to_i
 
                 # look for the original message
