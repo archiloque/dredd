@@ -93,7 +93,7 @@
   <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Maximum" checked="checked"> <label>Maximum</label></span>
   <span class="plotSpan"><input class="plotCheck" type="checkbox" name="Médiane" checked="checked"> <label>Médiane<a href="http://fr.wikipedia.org/wiki/Médiane_(centre)">?</a></label></span>
   <% @accounts.each do |account| %>
-    <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO>KO'}</span></label>" %></span>
+    <span class="plotSpan"><%= "<input class=\"plotCheck\" type=\"checkbox\" name=\"#{account.name}\"> <label><a href=\"/account/#{account.name}\">#{account.name}</a> <span class=\"#{account.last_connection_successful ? 'messageOK">OK' : 'messageKO">KO'}</span></label>" %></span>
   <% end %>
 </fieldset>
 
